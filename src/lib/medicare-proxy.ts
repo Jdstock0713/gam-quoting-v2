@@ -1,11 +1,13 @@
 /**
  * Shared helper for Medicare.gov API calls.
  *
- * Routes through a Cloudflare Worker proxy (set MEDICARE_PROXY_URL env var)
+ * Routes through a Render.com proxy (set MEDICARE_PROXY_URL env var)
  * to avoid Medicare.gov blocking Vercel's cloud IPs.
  *
  * If MEDICARE_PROXY_URL is not set, falls back to direct Medicare.gov calls
  * (which will only work from non-blocked IPs like localhost).
+ *
+ * Timeout is set to 45s because Render free tier cold-starts can take ~30s.
  */
 
 const DIRECT_MEDICARE_BASE = "https://www.medicare.gov/api/v1/data/plan-compare";
@@ -30,7 +32,7 @@ function isUsingProxy(): boolean {
 /**
  * GET request to Medicare.gov (via proxy if configured).
  */
-export async function medicareGet(path: string, timeoutMs = 15000): Promise<Response> {
+export async function medicareGet(path: string, timeoutMs = 45000): Promise<Response> {
   const base = getBaseUrl();
   const url = `${base}${path}`;
 
@@ -55,7 +57,7 @@ export async function medicareGet(path: string, timeoutMs = 15000): Promise<Resp
 export async function medicarePost(
   path: string,
   body: string,
-  timeoutMs = 20000
+  timeoutMs = 45000
 ): Promise<Response> {
   const base = getBaseUrl();
   const url = `${base}${path}`;

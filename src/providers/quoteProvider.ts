@@ -83,33 +83,26 @@ export async function fetchQuotes(request: QuoteRequest): Promise<Quote[]> {
 /*  Medicare Advantage (MAPD)                                         */
 /* ------------------------------------------------------------------ */
 
-export async function fetchMAPlans(
+const PAGE_SIZE = 10; // Medicare.gov returns 10 plans per page
+
+/**
+ * Fetch a single page of plans from Medicare.gov via our API route.
+ */
+async function fetchPlansPage(
+  planType: string,
   zip: string,
   fips: string,
-  year: string = "2026",
-  page: number = 0,
-  npis: string[] = [],
-  prescriptions: { rxcui: string; ndc?: string; quantity: number; frequency: string }[] = []
-): Promise<MAPlan[]> {
+  year: string,
+  page: number,
+  body: Record<string, unknown>
+): Promise<{ plans: unknown[]; total?: number }> {
   const qs = new URLSearchParams({
-    plan_type: "PLAN_TYPE_MAPD",
+    plan_type: planType,
     zip,
     fips,
     year,
     page: String(page),
   });
-
-  // Build POST body — Medicare.gov uses protobuf field names:
-  //   ndc (not rxcui), quantity, frequency — no is_insulin field
-  const body: Record<string, unknown> = {};
-  if (npis.length > 0) body.npis = npis;
-  if (prescriptions.length > 0) {
-    body.prescriptions = prescriptions.map((p) => ({
-      ndc: p.ndc || p.rxcui, // use NDC if available, fall back to rxcui
-      quantity: p.quantity,
-      frequency: p.frequency,
-    }));
-  }
 
   const res = await fetch(`/api/plans-search?${qs.toString()}`, {
     method: "POST",
@@ -120,10 +113,76 @@ export async function fetchMAPlans(
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}));
     const detail = errBody.detail || errBody.error || `Status ${res.status}`;
-    throw new Error(`Failed to fetch MA plans: ${detail}`);
+    throw new Error(`Failed to fetch plans: ${detail}`);
   }
   const data = await res.json();
-  return data.plans ?? [];
+  return { plans: data.plans ?? [], total: data.total };
+}
+
+/**
+ * Fetch ALL pages of plans by auto-paginating through Medicare.gov results.
+ * Medicare.gov returns 10 plans per page. We loop until we've collected all plans.
+ */
+async function fetchAllPlanPages(
+  planType: string,
+  zip: string,
+  fips: string,
+  year: string,
+  npis: string[],
+  prescriptions: { rxcui: string; ndc?: string; quantity: number; frequency: string }[]
+): Promise<unknown[]> {
+  const body: Record<string, unknown> = {};
+  if (npis.length > 0) body.npis = npis;
+  if (prescriptions.length > 0) {
+    body.prescriptions = prescriptions.map((p) => ({
+      ndc: p.ndc || p.rxcui,
+      quantity: p.quantity,
+      frequency: p.frequency,
+    }));
+  }
+
+  // Fetch first page to get total count
+  const first = await fetchPlansPage(planType, zip, fips, year, 0, body);
+  const allPlans = [...first.plans];
+  const total = first.total ?? 0;
+
+  // If there are more pages, fetch them all in parallel
+  if (total > PAGE_SIZE) {
+    const totalPages = Math.ceil(total / PAGE_SIZE);
+    const pagePromises = [];
+    for (let p = 1; p < totalPages; p++) {
+      pagePromises.push(fetchPlansPage(planType, zip, fips, year, p, body));
+    }
+    const results = await Promise.all(pagePromises);
+    for (const r of results) {
+      allPlans.push(...r.plans);
+    }
+  } else if (first.plans.length === PAGE_SIZE && !first.total) {
+    // Fallback: if no total field, keep fetching until a page returns < 10
+    let page = 1;
+    while (true) {
+      const next = await fetchPlansPage(planType, zip, fips, year, page, body);
+      allPlans.push(...next.plans);
+      if (next.plans.length < PAGE_SIZE) break;
+      page++;
+      if (page > 20) break; // safety limit (200 plans max)
+    }
+  }
+
+  return allPlans;
+}
+
+export async function fetchMAPlans(
+  zip: string,
+  fips: string,
+  year: string = "2026",
+  page: number = 0,
+  npis: string[] = [],
+  prescriptions: { rxcui: string; ndc?: string; quantity: number; frequency: string }[] = []
+): Promise<MAPlan[]> {
+  // page parameter kept for API compatibility but we now fetch all pages
+  void page;
+  return fetchAllPlanPages("PLAN_TYPE_MAPD", zip, fips, year, npis, prescriptions) as Promise<MAPlan[]>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -138,38 +197,9 @@ export async function fetchPDPPlans(
   npis: string[] = [],
   prescriptions: { rxcui: string; ndc?: string; quantity: number; frequency: string }[] = []
 ): Promise<PDPPlan[]> {
-  const qs = new URLSearchParams({
-    plan_type: "PLAN_TYPE_PDP",
-    zip,
-    fips,
-    year,
-    page: String(page),
-  });
-
-  // Build POST body — same protobuf field names as MA
-  const body: Record<string, unknown> = {};
-  if (npis.length > 0) body.npis = npis;
-  if (prescriptions.length > 0) {
-    body.prescriptions = prescriptions.map((p) => ({
-      ndc: p.ndc || p.rxcui,
-      quantity: p.quantity,
-      frequency: p.frequency,
-    }));
-  }
-
-  const res = await fetch(`/api/plans-search?${qs.toString()}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const errBody = await res.json().catch(() => ({}));
-    const detail = errBody.detail || errBody.error || `Status ${res.status}`;
-    throw new Error(`Failed to fetch PDP plans: ${detail}`);
-  }
-  const data = await res.json();
-  return data.plans ?? [];
+  // page parameter kept for API compatibility but we now fetch all pages
+  void page;
+  return fetchAllPlanPages("PLAN_TYPE_PDP", zip, fips, year, npis, prescriptions) as Promise<PDPPlan[]>;
 }
 
 /* ------------------------------------------------------------------ */

@@ -54,6 +54,8 @@ export default function MAResults({ zip, county, onBack }: Props) {
   const [sortBy, setSortBy] = useState<"premium" | "stars" | "drugcost">(
     "premium"
   );
+  const [currentPage, setCurrentPage] = useState(0);
+  const ITEMS_PER_PAGE = 10;
 
   async function handleFindPlans() {
     setIsLoading(true);
@@ -78,6 +80,7 @@ export default function MAResults({ zip, county, onBack }: Props) {
       );
 
       setPlans(results);
+      setCurrentPage(0);
       if (results.length === 0) {
         setError("No Medicare Advantage plans found for this area.");
       }
@@ -114,6 +117,12 @@ export default function MAResults({ zip, county, onBack }: Props) {
       a.partc_premium + a.partd_premium - (b.partc_premium + b.partd_premium)
     );
   });
+
+  const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+  const paginatedPlans = sorted.slice(
+    currentPage * ITEMS_PER_PAGE,
+    (currentPage + 1) * ITEMS_PER_PAGE
+  );
 
   const compared = plans.filter((p) => selectedIds.has(p.id));
 
@@ -284,9 +293,10 @@ export default function MAResults({ zip, county, onBack }: Props) {
                   <span className="text-sm text-gray-500">Sort by:</span>
                   <select
                     value={sortBy}
-                    onChange={(e) =>
-                      setSortBy(e.target.value as "premium" | "stars" | "drugcost")
-                    }
+                    onChange={(e) => {
+                      setSortBy(e.target.value as "premium" | "stars" | "drugcost");
+                      setCurrentPage(0);
+                    }}
                     className="border border-gray-300 rounded px-2 py-1 text-sm"
                   >
                     <option value="premium">Monthly Premium</option>
@@ -400,9 +410,14 @@ export default function MAResults({ zip, county, onBack }: Props) {
               <div>
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   Plans ({plans.length})
+                  {totalPages > 1 && (
+                    <span className="text-sm font-normal text-gray-500 ml-2">
+                      — Page {currentPage + 1} of {totalPages}
+                    </span>
+                  )}
                 </h2>
                 <div className="grid gap-3">
-                  {sorted.map((plan) => (
+                  {paginatedPlans.map((plan) => (
                     <div
                       key={plan.id}
                       className={`bg-white rounded-lg shadow p-4 border-2 transition-colors ${
@@ -567,6 +582,43 @@ export default function MAResults({ zip, county, onBack }: Props) {
                     </div>
                   ))}
                 </div>
+
+                {/* Pagination controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                      onClick={() => setCurrentPage(0)}
+                      disabled={currentPage === 0}
+                      className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      First
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                      disabled={currentPage === 0}
+                      className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      &larr; Prev
+                    </button>
+                    <span className="px-4 py-1.5 text-sm font-semibold text-blue-600">
+                      {currentPage + 1} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
+                      disabled={currentPage >= totalPages - 1}
+                      className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Next &rarr;
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(totalPages - 1)}
+                      disabled={currentPage >= totalPages - 1}
+                      className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      Last
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
