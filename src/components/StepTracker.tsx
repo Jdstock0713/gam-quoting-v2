@@ -17,7 +17,6 @@ export default function StepTracker({ steps, currentStep }: Props) {
         {steps.map((step, i) => {
           const isCompleted = i < currentStep;
           const isCurrent = i === currentStep;
-          const isUpcoming = i > currentStep;
 
           return (
             <li key={i} className="flex items-center">

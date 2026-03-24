@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: "No settings found" }, { status: 404 });
     }
     // Strip password hash from public response
-    const { admin_password_hash, ...publicSettings } = settings;
+    const { admin_password_hash: _hash, ...publicSettings } = settings;
     return NextResponse.json(publicSettings);
   } catch (e) {
     console.error("Admin settings GET error:", e);
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
     }
 
-    const { admin_password_hash, ...publicSettings } = result;
+    const { admin_password_hash: _hash2, ...publicSettings } = result;
     return NextResponse.json(publicSettings);
   } catch (e) {
     console.error("Admin settings PATCH error:", e);

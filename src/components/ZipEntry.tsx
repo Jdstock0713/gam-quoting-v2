@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { County, PlanType } from "@/types";
-import { lookupCounty } from "@/providers/quoteProvider";
 
 type Props = {
   onContinue: (zip: string, county: County, planType: PlanType) => void;

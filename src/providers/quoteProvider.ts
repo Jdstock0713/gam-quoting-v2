@@ -261,7 +261,6 @@ export async function searchPharmacies(
  */
 function detectIssueType(r: Record<string, string>): LifeIssueType {
   const product = (r.Compulife_product || "").toLowerCase();
-  const company = (r.Compulife_company || "").toLowerCase();
   const code = (r.Compulife_compprodcode || "").toUpperCase();
 
   // Guaranteed Issue indicators
