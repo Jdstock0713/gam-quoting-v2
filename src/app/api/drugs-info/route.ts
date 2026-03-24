@@ -1,15 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const MEDICARE_API_BASE = "https://www.medicare.gov/api/v1/data/plan-compare";
-const HEADERS: Record<string, string> = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-  Accept: "*/*",
-  "Content-Type": "application/json",
-  "Fe-Ver": "2.64.0",
-  Referer: "https://www.medicare.gov/plan-compare/",
-  Origin: "https://www.medicare.gov",
-};
+import { medicarePost } from "@/lib/medicare-proxy";
 
 /**
  * POST /api/drugs-info?rxcui=235743
@@ -38,24 +28,20 @@ export async function POST(request: NextRequest) {
       body = JSON.stringify({ ndcs: [] });
     }
 
-    const upstream = await fetch(
-      `${MEDICARE_API_BASE}/drugs/info/${encodeURIComponent(rxcui)}?year=${year}`,
-      {
-        method: "POST",
-        headers: HEADERS,
-        body,
-      }
+    const res = await medicarePost(
+      `/drugs/info/${encodeURIComponent(rxcui)}?year=${year}`,
+      body
     );
 
-    if (!upstream.ok) {
-      const errText = await upstream.text();
+    if (!res.ok) {
+      const errText = await res.text();
       return NextResponse.json(
-        { error: `Medicare.gov returned ${upstream.status}: ${errText}` },
+        { error: `Medicare.gov returned ${res.status}: ${errText}` },
         { status: 502 }
       );
     }
 
-    const data = await upstream.json();
+    const data = await res.json();
     return NextResponse.json(data);
   } catch {
     return NextResponse.json(

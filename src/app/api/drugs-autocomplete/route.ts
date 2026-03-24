@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const MEDICARE_API_BASE = "https://www.medicare.gov/api/v1/data/plan-compare";
-const HEADERS: Record<string, string> = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-  Accept: "*/*",
-  "Fe-Ver": "2.64.0",
-  Referer: "https://www.medicare.gov/plan-compare/",
-  Origin: "https://www.medicare.gov",
-};
+import { medicareGet } from "@/lib/medicare-proxy";
 
 /**
  * Generic-to-brand fallback mapping.
@@ -68,14 +59,11 @@ async function fetchAutocomplete(
   year: string
 ): Promise<{ drugs: DrugResult[] }> {
   const qs = new URLSearchParams({ name, year });
-  const upstream = await fetch(
-    `${MEDICARE_API_BASE}/drugs/autocomplete?${qs.toString()}`,
-    { headers: HEADERS }
-  );
-  if (!upstream.ok) {
-    throw new Error(`Medicare.gov returned ${upstream.status}`);
+  const res = await medicareGet(`/drugs/autocomplete?${qs.toString()}`);
+  if (!res.ok) {
+    throw new Error(`Medicare.gov returned ${res.status}`);
   }
-  return upstream.json();
+  return res.json();
 }
 
 /**

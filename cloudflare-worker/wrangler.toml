@@ -1,0 +1,6 @@
+name = "medicare-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Free plan works fine for this use case
+# Deploy with: npx wrangler deploy
