@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>COMPULIFE API</title>
+
+<style type="text/css">
+       	a:link { color: #0148CB }
+		a:visited { color: #397DFD }
+		a:hover {text-decoration: none; color: #0148CB }
+		a:active { color: #0148CB }
+	   
+	   
+	   h1 { color: #262626; 
+			font-family: Arial, Verdana, Helvetica, sans-serif; 
+			font-size: 17pt; 
+			font-weight: bold; 
+			text-align: left; 
+			}
+		h2 { color: #262626; 
+			font-family: Arial, Verdana, Helvetica, sans-serif; 
+			font-size: 17pt; 
+			font-weight: bold; 
+			text-align: left;
+			} 
+		h3 { color: #0148CB; 
+			font-family: Arial, Verdana, Helvetica, sans-serif; 
+			font-size: 14pt; 
+			font-weight: bold; 
+			text-align: left;
+			}
+		p { color: #262626; 
+			font-family: Arial, Verdana, Helvetica, sans-serif;
+			font-size: 12pt; 
+			font-weight: normal; 
+			text-align: left;
+			}
+			
+		ol{ color: #262626; 
+			font-family: Arial, Verdana, Helvetica, sans-serif; 
+			font-weight: normal; 
+			text-align: left;
+			line-height: 200%; 
+			} 
+		ul{ color: #262626;
+			font-family: Arial, Verdana, Helvetica, sans-serif; 
+			font-weight: normal; 
+			text-align: left;
+			line-height: 200%; 
+			}
+		.default_table {
+    		border-collapse: collapse;
+    		border: 1px solid #004080;
+    		background-color: #FFFFFF;
+    		padding: 2px;
+    		color: #000000; 
+    		font-family: Arial, Verdana, Helvetica, sans-serif; 
+    		font-size: 11pt; 
+    		font-weight: normal; 
+    		text-align: left;
+    		margin-left:auto; 
+    		margin-right:auto;
+			}
+</style>
+
+</head>
+<body>
+
+<a href="https://compulife.com/"><img src="https://compulife.com/wp-content/uploads/2018/10/compulifelogo.png" alt="" title="COMPULIFE" /></a>
+
+<br><br>
+<h1>COMPULIFE API - Documentation (readme.html)</h1>
+
+<br><hr><br>
+
+<h1>Table of Contents</h1>
+
+<ol>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#ref">Postman Collection - Reference Documentation</a></li>
+<li><a href="#api-sample-requests">Sample Requests</a></li>
+<li><a href="#quoter-sample">Sample Requests That Require Authorization ID</a></li>
+<li><a href="#logfile">Sample Log File and Debugging Tips</a></li>
+</ol>
+
+<br><hr><br>
+
+<h2 id="introduction">1. Introduction</h2>
+<p>The Compulife API has been designed to give access to the COMPULIFE Internet Quote Engine software through the use of JSON formatted data. 
+The API has sections that are public (anyone can use) or private (must have a COMPULIFE Authorization ID). 
+Only one server is allowed to access the COMPULIFE API per Authorization ID, and this is tracked by matching the ID with the IP address.
+<b>The first time you use your COMPULIFEAUTHORIZATIONID your IP used for that request is logged and is assumed to be the one you will be using.</b>
+Moving your code to a new server will require you to contact us to reset your information. This applies to development/live server moves as well, if your development server and live server have a different IP address.
+</p>
+
+<br>
+
+<h2 id="overview">2. Overview</h2>  
+<p>The API can be used directly, or you can use a local php/javascript library which does the heavy lifting of the interface for you.</p>
+<p>API functions include:
+<ul><li>State/Province lists that can be used.</li>
+<li>Company logos that can be used in your results.</li>
+<li>List of life companies that are available to quote, for the United States or Canada.</li>
+<li>Lists of life companies with their available products to quote.</li>
+<li>Running quotes (including only the companies and products that you want want to quote).</li>
+<li>Running spreadsheet styled results.</li>
+<li>Running quotes with our health analyzer questionnaire.</li>
+</ul>
+</p>
+
+<br>
+
+<h2 id="ref">3. Postman Collection - Reference Documentation</h2>
+<p>We have created a Postman collection for your reference and development use at:<br><br>
+<a href="https://docs.compulife.com">https://docs.compulife.com</a>   
+</p>
+
+<br>
+
+<h2 id="api-sample-requests">4. Sample Requests</h2>
+<p>Similar to our Postman Collection, <a href="api-sample-requests.php">api-sample-requests.php</a> references samples that can be used from a local computer or a server.  It does not require any php code in order to run, however the results returned are in JSON format, so this serves as reference example only. Most browsers can add a plugin or extension to
+format JSON into something more readable, but this is obviously is not suitable for anything other then development reference purposes.
+</p>
+<p>
+Some sample requests do not require an Authorization ID.  If an Authorization ID is required, you will need to configure your config.php page.
+<br><br>
+As you go through the examples, the bottom of the page shows the url that is generated in order to get results from the API. 
+<br><br>
+<b>IMPORTANT: Your COMPULIFE Authorization ID is only valid for one IP address, so if you are doing development on a different server you will have to call COMPULIFE to reset your Compulife Authorization ID.</b>
+</p>
+
+<br>
+
+<h2 id="quoter-sample">5. Sample Requests That Require Authorization ID</h2>
+<p><a href="quoter-sample.php">Quoter-sample.php</a> shows sample quote forms and will show working results. 
+It uses the local COMPULIFE API php and javascript code to call the engine and will handle logging of calls. 
+In order to use this config.php must be updated with 
+<ol>
+<li><b>Authorization ID</b>  
+<ul>
+<li>i.e. - ['COMPULIFEAUTHORIZATION'] = 'INSERT_ID'</li>
+</ul>
+</li>
+<li><b>Server path to where you want your log files to be recorded</b>
+<ul>
+<li>i.e. - ['log_path'] = '/home/yourserverpath/compulifeapi.logs/'</li>
+</ul>
+</li>
+</ol>
+<p>You also need to create the directory of where your log files will be put.</p>
+<p>There are three examples of lookups with quoter-sample.php.</p> 
+<ol>
+<li>Quote Results - shows the results in ajax style on the same page. </li>
+<li>Side by Side Spreadsheet - again shows the results in ajax style on the same page.</li> 
+<li>Health Analyzer - continues to the health analyzer questionnaire page which will ask more detailed questions about the client's health.  This page is fairly complicated, so we suggest limiting your editing to light css type of editing. 
+Clicking submit on this page goes to results.php, which does the actual API lookup and will show the results in ajax style on the same page.</li>
+</ol> 
+<p><b>IMPORTANT: Your COMPULIFE Authorization ID is only valid for one IP address, 
+so if you are doing development on a different server you will have to call us to reset your Compulife Authorization ID.</b> 
+</p>
+
+<br>
+
+<h2 id="logfile">6. Sample Log file and debugging tips</h2>
+<p>Log file names are formatted as log-YEAR-MM-DD.log<br> 
+The detail can be set in the config.php, the default is '4' which is show all.  
+</p>
+<p>A sample log entry is:<br>
+INFO - 2020-07-11 00:08:50-->===== Request Start =====<br>
+INFO - 2020-07-11 00:08:50-->json={"COMPULIFEAUTHORIZATIONID":"INSERT_ID","BirthDay":"20","BirthMonth":"9","BirthYear":"1987","CompRating":"4","ErrOnMissingZipCode":"ON","FaceAmount":"250000","Health":"PP","ModeUsed":"M","NewCategory":"7","Sex":"M","Smoker":"N","SortOverride1":"A","State":"0","ZipCode":"84081"}<br>
+INFO - 2020-07-11 00:08:50-->api request string = https://www.compulifeapi.com/api/request/?COMPULIFE={"COMPULIFEAUTHORIZATIONID":"INSERT_ID","BirthDay":"20","BirthMonth":"9","BirthYear":"1987","CompRating":"4","ErrOnMissingZipCode":"ON","FaceAmount":"250000","Health":"PP","ModeUsed":"M","NewCategory":"7","Sex":"M","Smoker":"N","SortOverride1":"A","State":"0","ZipCode":"84081"}<br>
+</p>
+<p>The API request string can put put into the address bar of your browser, and will show results in JSON. 
+This is very useful in debugging where things go wrong. Keep in mind that the COMPULIFEAUTHORIZATIONID for your IP address must match, and if your browser is at a different IP address then the server you are debugging that will affect your results.  In this case, make a tiny html page on your server that has the request string as a link, in order to get results.
+</p>
+
+
+<br><br><br>
+
+</body>
+</html>
