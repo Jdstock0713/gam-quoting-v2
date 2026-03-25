@@ -1,0 +1,12 @@
+{
+  "name": "compulife-proxy",
+  "version": "1.0.0",
+  "description": "Static-IP proxy for Compulife API (deployed on Render)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { LifeQuoteRequest } from "@/types";
 
 const US_STATES = [
@@ -39,6 +39,10 @@ const HEALTH_CLASSES = [
   { value: "RP", label: "Regular Plus" },
   { value: "R", label: "Regular" },
 ];
+
+export function getLifeQuotedHealthLabel(code: string): string {
+  return HEALTH_CLASSES.find((h) => h.value === code)?.label ?? code;
+}
 
 // Categories organized by underwriting type for broker-friendly navigation
 // Note: Compulife's category codes map to product structure (term length, etc.)
@@ -132,16 +136,106 @@ const FACE_AMOUNTS = [
   { value: "2000000", label: "$2,000,000" },
 ];
 
+export function getLifeInsuranceCategoryLabel(code: string): string {
+  for (const group of PRODUCT_CATEGORY_GROUPS) {
+    const found = group.options.find((o) => o.value === code);
+    if (found) return found.label;
+  }
+  return code;
+}
+
+export function formatLifeFaceAmountDisplay(value: string): string {
+  const preset = FACE_AMOUNTS.find((a) => a.value === value);
+  if (preset) return preset.label;
+  const n = parseInt(value, 10);
+  if (!Number.isNaN(n)) return `$${n.toLocaleString("en-US")}`;
+  return value;
+}
+
+/** Compact face for summary chips, e.g. 400K, 1.5M */
+export function formatLifeFaceAmountShort(value: string): string {
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n)) return value;
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    const s = Number.isInteger(m) ? String(m) : m.toFixed(1).replace(/\.0$/, "");
+    return `${s}M`;
+  }
+  if (n >= 1_000) {
+    const k = n / 1_000;
+    const s = Number.isInteger(k) ? String(k) : k.toFixed(1).replace(/\.0$/, "");
+    return `${s}K`;
+  }
+  return String(n);
+}
+
+/** Short product type for the quote run summary line */
+export function getLifeInsuranceCategoryShortLabel(code: string): string {
+  const full = getLifeInsuranceCategoryLabel(code);
+  const levelTerm = full.match(/(\d+)\s*Year\s*Level\s*Term/i);
+  if (levelTerm) return `${levelTerm[1]}y Term`;
+  const rop = full.match(/(\d+)\s*Year\s*Return\s*of\s*Premium/i);
+  if (rop) return `${rop[1]}y ROP`;
+  const toAge = full.match(/Term\s+to\s+Age\s+(\d+)/i);
+  if (toAge) return `To ${toAge[1]}`;
+  const art = full.match(/(\d+)\s*Year\s*(?:Annual\s*)?Renewable/i);
+  if (art) return `${art[1]}y ART`;
+  if (full.startsWith("⟶")) {
+    const rest = full.replace(/^⟶\s*/, "").trim();
+    return rest.length > 24 ? `${rest.slice(0, 22)}…` : rest;
+  }
+  if (full.length <= 24) return full;
+  return `${full.slice(0, 22)}…`;
+}
+
+/**
+ * One-line shorthand for the last successful quote request, e.g.
+ * `M, NT, 07-15-1970, P+, 20y Term, 400K`
+ */
+export function formatLifeQuoteRunSummary(req: LifeQuoteRequest): string {
+  const tobacco = req.smoker === "N" ? "NT" : "T";
+  const mo = req.birthMonth.padStart(2, "0");
+  const d = req.birthDay.padStart(2, "0");
+  const healthShort =
+    req.health === "PP"
+      ? "P+"
+      : req.health === "P"
+        ? "P"
+        : req.health === "RP"
+          ? "RP"
+          : req.health === "R"
+            ? "R"
+            : req.health;
+  return [
+    req.gender,
+    tobacco,
+    `${mo}-${d}-${req.birthYear}`,
+    healthShort,
+    getLifeInsuranceCategoryShortLabel(req.category),
+    formatLifeFaceAmountShort(req.faceAmount),
+  ].join(", ");
+}
+
 type Props = {
   onSubmit: (request: LifeQuoteRequest) => void;
   isLoading: boolean;
   enabledStates?: string[];   // Admin-configured licensed states
   enabledCarriers?: string[]; // Admin-configured enabled carrier codes
+  /** Snapshot key for the request that produced current results (null = no quotes yet). */
+  quotedRequestKey?: string | null;
+  /** Tighter typography and spacing for narrow sidebar panels */
+  density?: "comfortable" | "dense";
 };
 
-export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates = [], enabledCarriers = [] }: Props) {
+export default function LifeInsuranceForm({
+  onSubmit,
+  isLoading,
+  enabledStates = [],
+  enabledCarriers = [],
+  quotedRequestKey = null,
+  density = "comfortable",
+}: Props) {
   const [state, setState] = useState("23"); // Michigan
-  const [zipCode, setZipCode] = useState("");
   const [birthMonth, setBirthMonth] = useState("6");
   const [birthDay, setBirthDay] = useState("15");
   const [birthYear, setBirthYear] = useState("1970");
@@ -150,7 +244,6 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
   const [health, setHealth] = useState("PP");
   const [category, setCategory] = useState("5");
   const [faceAmount, setFaceAmount] = useState("500000");
-  const [mode, setMode] = useState("M");
 
   // Generate year options (1930 to current year - 18)
   const currentYear = new Date().getFullYear();
@@ -186,11 +279,25 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
 
   const coverageWarning = getCoverageWarning();
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    onSubmit({
+  const requestKey = useMemo(
+    () =>
+      JSON.stringify({
+        state,
+        birthMonth,
+        birthDay,
+        birthYear,
+        gender,
+        smoker,
+        health,
+        category,
+        faceAmount,
+        mode: "M",
+        isFinalExpense,
+        compInc:
+          enabledCarriers.length > 0 ? enabledCarriers.join(",") : "",
+      }),
+    [
       state,
-      zipCode,
       birthMonth,
       birthDay,
       birthYear,
@@ -199,59 +306,94 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
       health,
       category,
       faceAmount,
-      mode,
+      isFinalExpense,
+      enabledCarriers,
+    ]
+  );
+
+  const resultsOutOfDate =
+    quotedRequestKey !== null && requestKey !== quotedRequestKey;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onSubmit({
+      state,
+      birthMonth,
+      birthDay,
+      birthYear,
+      gender,
+      smoker,
+      health,
+      category,
+      faceAmount,
+      mode: "M",
       isFinalExpense,
       compInc: enabledCarriers.length > 0 ? enabledCarriers.join(",") : undefined,
     });
   }
 
-  const selectClass =
-    "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500";
-  const labelClass = "block text-sm font-semibold text-gray-700 mb-1";
+  const dense = density === "dense";
+  const selectClass = dense
+    ? "w-full min-w-0 border border-gray-300 rounded-md px-2 py-1.5 text-xs leading-snug focus:outline-none focus:ring-2 focus:ring-emerald-500"
+    : "w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500";
+  /** DOB row: slightly larger text so month/day/year stay legible in the narrow sidebar */
+  const dobSelectClass = dense
+    ? "w-full min-w-0 border border-gray-300 rounded-md px-1.5 py-1.5 text-sm leading-snug focus:outline-none focus:ring-2 focus:ring-emerald-500"
+    : selectClass;
+  const labelClass = dense
+    ? "block text-xs font-semibold text-gray-600 mb-0.5"
+    : "block text-sm font-semibold text-gray-700 mb-1";
+  const toggleBtnClass = (active: boolean) =>
+    dense
+      ? `flex-1 text-center py-1.5 rounded-md border cursor-pointer transition-colors text-xs font-medium ${
+          active
+            ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+        }`
+      : `flex-1 text-center py-2 rounded border-2 cursor-pointer transition-colors text-sm font-medium ${
+          active
+            ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+        }`;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* State & ZIP */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>State</label>
-          <select
-            value={state}
-            onChange={(e) => setState(e.target.value)}
-            className={selectClass}
-          >
-            {(enabledStates.length > 0
-              ? US_STATES.filter((s) => enabledStates.includes(s.code))
-              : US_STATES
-            ).map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>ZIP Code</label>
-          <input
-            type="text"
-            value={zipCode}
-            onChange={(e) =>
-              setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))
-            }
-            placeholder="48383"
-            className={selectClass}
-          />
-        </div>
+    <form
+      onSubmit={handleSubmit}
+      className={dense ? "space-y-2.5" : "space-y-4"}
+    >
+      {/* State */}
+      <div>
+        <label className={labelClass}>State</label>
+        <select
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          className={selectClass}
+        >
+          {(enabledStates.length > 0
+            ? US_STATES.filter((s) => enabledStates.includes(s.code))
+            : US_STATES
+          ).map((s) => (
+            <option key={s.code} value={s.code}>
+              {s.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Birthdate */}
       <div>
         <label className={labelClass}>Date of Birth</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div
+          className={
+            dense
+              ? "grid gap-1.5 grid-cols-[minmax(0,1.2fr)_minmax(0,0.55fr)_minmax(3.25rem,1fr)]"
+              : "grid grid-cols-3 gap-2"
+          }
+        >
           <select
             value={birthMonth}
             onChange={(e) => setBirthMonth(e.target.value)}
-            className={selectClass}
+            className={dobSelectClass}
           >
             {[
               "January", "February", "March", "April", "May", "June",
@@ -265,7 +407,7 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
           <select
             value={birthDay}
             onChange={(e) => setBirthDay(e.target.value)}
-            className={selectClass}
+            className={dobSelectClass}
           >
             {Array.from({ length: 31 }, (_, i) => (
               <option key={i + 1} value={String(i + 1)}>
@@ -276,9 +418,9 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
           <select
             value={birthYear}
             onChange={(e) => setBirthYear(e.target.value)}
-            className={selectClass}
+            className={dobSelectClass}
           >
-            {years.reverse().map((y) => (
+            {[...years].reverse().map((y) => (
               <option key={y} value={y}>
                 {y}
               </option>
@@ -290,18 +432,14 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
       {/* Gender */}
       <div>
         <label className={labelClass}>Gender</label>
-        <div className="flex gap-4">
+        <div className={dense ? "flex gap-2" : "flex gap-4"}>
           {[
             { value: "M" as const, label: "Male" },
             { value: "F" as const, label: "Female" },
           ].map((opt) => (
             <label
               key={opt.value}
-              className={`flex-1 text-center py-2 rounded border-2 cursor-pointer transition-colors text-sm font-medium ${
-                gender === opt.value
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-800"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-              }`}
+              className={toggleBtnClass(gender === opt.value)}
             >
               <input
                 type="radio"
@@ -320,18 +458,14 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
       {/* Smoker */}
       <div>
         <label className={labelClass}>Tobacco / Smoker</label>
-        <div className="flex gap-4">
+        <div className={dense ? "flex gap-2" : "flex gap-4"}>
           {[
             { value: "N" as const, label: "No" },
             { value: "Y" as const, label: "Yes" },
           ].map((opt) => (
             <label
               key={opt.value}
-              className={`flex-1 text-center py-2 rounded border-2 cursor-pointer transition-colors text-sm font-medium ${
-                smoker === opt.value
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-800"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-              }`}
+              className={toggleBtnClass(smoker === opt.value)}
             >
               <input
                 type="radio"
@@ -381,56 +515,80 @@ export default function LifeInsuranceForm({ onSubmit, isLoading, enabledStates =
             </optgroup>
           ))}
         </select>
-        <p className="text-xs text-gray-400 mt-1">
+        <p
+          className={
+            dense
+              ? "text-[10px] leading-snug text-gray-400 mt-1"
+              : "text-xs text-gray-400 mt-1"
+          }
+        >
           {PRODUCT_CATEGORY_GROUPS.find((g) =>
             g.options.some((o) => o.value === category)
           )?.description || ""}
         </p>
       </div>
 
-      {/* Face Amount & Premium Mode */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className={labelClass}>Coverage Amount</label>
-          <select
-            value={faceAmount}
-            onChange={(e) => setFaceAmount(e.target.value)}
-            className={selectClass}
-          >
-            {FACE_AMOUNTS.map((a) => (
-              <option key={a.value} value={a.value}>
-                {a.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className={labelClass}>Premium Display</label>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            className={selectClass}
-          >
-            <option value="M">Monthly</option>
-            <option value="Q">Quarterly</option>
-            <option value="H">Semi-Annual</option>
-            <option value="ALL">All</option>
-          </select>
-        </div>
+      {/* Coverage Amount — premium mode fixed to monthly (M) for Compulife */}
+      <div>
+        <label className={labelClass}>Coverage Amount</label>
+        <select
+          value={faceAmount}
+          onChange={(e) => setFaceAmount(e.target.value)}
+          className={selectClass}
+        >
+          {FACE_AMOUNTS.map((a) => (
+            <option key={a.value} value={a.value}>
+              {a.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Coverage Warning */}
       {coverageWarning && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-          <p className="text-xs text-amber-800">{coverageWarning}</p>
+        <div
+          className={
+            dense
+              ? "bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5"
+              : "bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+          }
+        >
+          <p className={dense ? "text-[10px] leading-snug text-amber-800" : "text-xs text-amber-800"}>
+            {coverageWarning}
+          </p>
         </div>
+      )}
+
+      {/* Stale results hint */}
+      {resultsOutOfDate && (
+        <p
+          className={
+            dense
+              ? "text-[10px] text-center leading-snug text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5"
+              : "text-xs text-center text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+          }
+          role="status"
+          aria-live="polite"
+        >
+          Form changed — press{" "}
+          <span className="font-semibold">Get Life Insurance Quotes</span> to
+          update results.
+        </p>
       )}
 
       {/* Submit */}
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full bg-emerald-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className={`w-full text-white rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+          dense ? "py-2 px-3 text-sm" : "py-3 px-4"
+        } ${
+          resultsOutOfDate
+            ? dense
+              ? "bg-emerald-600 hover:bg-emerald-700 ring-2 ring-amber-400 ring-offset-1 ring-offset-white shadow-md"
+              : "bg-emerald-600 hover:bg-emerald-700 ring-4 ring-amber-400 ring-offset-2 ring-offset-white shadow-lg scale-[1.02]"
+            : "bg-emerald-600 hover:bg-emerald-700"
+        }`}
       >
         {isLoading ? "Getting Quotes..." : "Get Life Insurance Quotes"}
       </button>

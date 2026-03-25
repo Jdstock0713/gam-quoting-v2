@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-
-const COMPULIFE_API_BASE = "https://www.compulifeapi.com/api";
+import { compulifeGet } from "@/lib/compulife-proxy";
 
 // Cache logos in memory since they rarely change
 let cachedLogos: Record<string, string> | null = null;
@@ -14,12 +13,7 @@ export async function GET() {
       return NextResponse.json(cachedLogos);
     }
 
-    const res = await fetch(`${COMPULIFE_API_BASE}/CompanyLogoList/small/`, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 GoldenAgeQuoting/1.0",
-        Accept: "*/*",
-      },
-    });
+    const res = await compulifeGet("/CompanyLogoList/small/");
 
     if (!res.ok) {
       return NextResponse.json(

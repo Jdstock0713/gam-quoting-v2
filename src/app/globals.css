@@ -1,3 +1,63 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Plain fallbacks: if Tailwind output ever fails to load, you still get a readable page.
+ * (Does not replace utilities on components — fix CSS loading / dev server if this is all you see.)
+ */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  color: #111827;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+}
+
+/* Life quote compare modal: print / Save as PDF (hides main app, shows modal content) */
+@media print {
+  body.life-compare-modal-open > *:not(.life-compare-portal) {
+    display: none !important;
+  }
+
+  body.life-compare-modal-open .life-compare-portal {
+    position: static !important;
+    display: block !important;
+    background: white !important;
+    padding: 0 !important;
+    min-height: auto !important;
+  }
+
+  body.life-compare-modal-open .life-compare-no-print {
+    display: none !important;
+  }
+
+  body.life-compare-modal-open .compare-print-table {
+    font-size: 10px;
+  }
+
+  body.life-compare-modal-open .compare-sticky-col {
+    position: static !important;
+    left: auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border-right: none !important;
+  }
+
+  body.life-compare-modal-open a[href]::after {
+    content: none !important;
+  }
+}

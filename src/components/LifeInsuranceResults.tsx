@@ -1,9 +1,56 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { LifeQuoteRequest, LifeComparisonResponse, LifeQuoteResult, LifeIssueType } from "@/types";
 import { fetchLifeQuotes } from "@/providers/quoteProvider";
-import LifeInsuranceForm from "./LifeInsuranceForm";
+import {
+  hasValidLifeQuoteResult,
+  parseLimitedPayPlan,
+  premiumSortValue,
+} from "@/lib/lifePremiumDisplay";
+import LifeInsuranceForm, {
+  formatLifeFaceAmountDisplay,
+  formatLifeQuoteRunSummary,
+  getLifeInsuranceCategoryLabel,
+  getLifeQuotedHealthLabel,
+} from "./LifeInsuranceForm";
+import LifeCompareModal from "./LifeCompareModal";
+
+const MAX_COMPARE_QUOTES = 5;
+
+/** Frozen at checkbox time — premiums & request context do not change when the user re-quotes */
+type CompareSnapshot = {
+  id: string;
+  result: LifeQuoteResult;
+  request: LifeQuoteRequest;
+  isFinalExpense: boolean;
+};
+
+/** Stable React key within a single results list (compProdCode alone can collide across merged responses). */
+function lifeQuoteRowId(r: LifeQuoteResult): string {
+  return [r.compProdCode, r.company, r.product].join("|");
+}
+
+/** Unique id for compare snapshots — product identity plus full quoted request so the same carrier/product at different coverage/health/term/etc. is distinct. */
+function compareSnapshotId(r: LifeQuoteResult, req: LifeQuoteRequest): string {
+  return [
+    r.compProdCode,
+    r.company,
+    r.product,
+    req.state,
+    req.birthMonth,
+    req.birthDay,
+    req.birthYear,
+    req.gender,
+    req.smoker,
+    req.health,
+    req.category,
+    req.faceAmount,
+    req.mode,
+    req.isFinalExpense ? "1" : "0",
+    req.compInc ?? "",
+  ].join("|");
+}
 
 // Static carrier website mapping — Compulife API doesn't provide websites
 const CARRIER_WEBSITES: Record<string, string> = {
@@ -51,12 +98,202 @@ function getCarrierWebsite(company: string): string | null {
   return null;
 }
 
+function LifeCompareQueueSection({
+  showOuterCard,
+  quotedRequestKey,
+  compareSnapshots,
+  onOpenModal,
+  onRemove,
+  onClearAll,
+}: {
+  showOuterCard: boolean;
+  quotedRequestKey: string | null;
+  compareSnapshots: CompareSnapshot[];
+  onOpenModal: () => void;
+  onRemove: (id: string) => void;
+  onClearAll: () => void;
+}) {
+  if (!quotedRequestKey) return null;
+  const compact = !showOuterCard;
+  const inner = (
+    <>
+      <p
+        className={
+          compact
+            ? "text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1.5"
+            : "text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2"
+        }
+      >
+        Compare
+      </p>
+      <button
+        type="button"
+        disabled={compareSnapshots.length < 2}
+        onClick={onOpenModal}
+        className={`w-full rounded-lg font-semibold transition-all ${
+          compact
+            ? "py-2 px-2 text-xs"
+            : "py-2.5 px-4 text-sm"
+        } ${
+          compareSnapshots.length >= 2
+            ? compact
+              ? "bg-emerald-600 text-white shadow-sm ring-1 ring-amber-300/90 ring-offset-1 hover:bg-emerald-700"
+              : "bg-emerald-600 text-white shadow-md ring-2 ring-amber-300 ring-offset-2 hover:bg-emerald-700"
+            : "bg-gray-100 text-gray-400 cursor-not-allowed"
+        }`}
+      >
+        Compare Quotes ({compareSnapshots.length})
+      </button>
+      {compareSnapshots.length >= MAX_COMPARE_QUOTES && (
+        <p
+          className={
+            compact
+              ? "text-[10px] text-amber-700 mt-1.5 leading-snug"
+              : "text-xs text-amber-700 mt-2"
+          }
+        >
+          Maximum {MAX_COMPARE_QUOTES} quotes can be compared.
+        </p>
+      )}
+      {compareSnapshots.length > 0 ? (
+        <>
+          <ul
+            className={
+              compact
+                ? "mt-2 space-y-1.5 border-t border-gray-100 pt-2"
+                : "mt-3 space-y-2 border-t border-gray-100 pt-3"
+            }
+          >
+            {compareSnapshots.map((snap) => (
+              <li
+                key={snap.id}
+                className={
+                  compact
+                    ? "flex items-start justify-between gap-1.5 text-[10px] rounded-md p-1.5 bg-gray-50 border border-gray-100"
+                    : "flex items-start justify-between gap-2 text-xs rounded-md p-2 bg-gray-50 border border-gray-100"
+                }
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-800 truncate leading-tight">
+                    {snap.result.company}
+                  </p>
+                  <p className="text-gray-600 truncate leading-tight">
+                    {snap.result.product.trim()}
+                  </p>
+                  <p
+                    className={
+                      compact
+                        ? "text-gray-500 mt-0.5 leading-snug line-clamp-2"
+                        : "text-gray-500 mt-1 leading-snug line-clamp-2"
+                    }
+                    title={`${getLifeQuotedHealthLabel(snap.request.health)} · ${getLifeInsuranceCategoryLabel(snap.request.category)} · Saved at ${formatLifeFaceAmountDisplay(snap.request.faceAmount)}`}
+                  >
+                    {getLifeQuotedHealthLabel(snap.request.health)} ·{" "}
+                    {getLifeInsuranceCategoryLabel(snap.request.category)} ·
+                    Saved at{" "}
+                    {formatLifeFaceAmountDisplay(snap.request.faceAmount)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Remove ${snap.result.company} from compare`}
+                  onClick={() => onRemove(snap.id)}
+                  className={
+                    compact
+                      ? "flex-shrink-0 text-gray-400 hover:text-red-600 font-bold text-base leading-none px-0.5"
+                      : "flex-shrink-0 text-gray-400 hover:text-red-600 font-bold text-lg leading-none px-1"
+                  }
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 flex justify-center">
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="text-xs font-medium text-gray-500 hover:text-red-600 underline"
+            >
+              Clear all comparisons
+            </button>
+          </div>
+        </>
+      ) : (
+        <p
+          className={
+            compact
+              ? "text-[10px] text-gray-500 mt-1.5 leading-snug"
+              : "text-xs text-gray-500 mt-2"
+          }
+        >
+          Use the Compare button on a quote card to add it here (up to{" "}
+          {MAX_COMPARE_QUOTES}).
+        </p>
+      )}
+    </>
+  );
+  if (showOuterCard) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200 shrink-0">
+        {inner}
+      </div>
+    );
+  }
+  return <div className="min-w-0">{inner}</div>;
+}
+
+function LifeQuoteFormSection({
+  showOuterCard,
+  onSubmit,
+  isLoading,
+  enabledStates,
+  enabledCarriers,
+  quotedRequestKey,
+}: {
+  showOuterCard: boolean;
+  onSubmit: (request: LifeQuoteRequest) => void;
+  isLoading: boolean;
+  enabledStates: string[];
+  enabledCarriers: string[];
+  quotedRequestKey: string | null;
+}) {
+  const sidebar = !showOuterCard;
+  const inner = (
+    <>
+      <h2
+        className={
+          sidebar
+            ? "text-base font-bold text-gray-800 mb-2.5"
+            : "text-lg font-bold text-gray-800 mb-4"
+        }
+      >
+        Life Insurance Quote
+      </h2>
+      <LifeInsuranceForm
+        onSubmit={onSubmit}
+        isLoading={isLoading}
+        enabledStates={enabledStates}
+        enabledCarriers={enabledCarriers}
+        quotedRequestKey={quotedRequestKey}
+        density={sidebar ? "dense" : "comfortable"}
+      />
+    </>
+  );
+  if (showOuterCard) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg p-6 shrink-0">{inner}</div>
+    );
+  }
+  return <div className="min-w-0">{inner}</div>;
+}
+
 export default function LifeInsuranceResults() {
   const [comparisons, setComparisons] = useState<LifeComparisonResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedForCompare, setSelectedForCompare] = useState<Set<string>>(
-    new Set()
+  const [compareSnapshots, setCompareSnapshots] = useState<CompareSnapshot[]>(
+    []
   );
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [logos, setLogos] = useState<Record<string, string>>({});
@@ -66,6 +303,18 @@ export default function LifeInsuranceResults() {
   // Admin settings from Supabase
   const [enabledStates, setEnabledStates] = useState<string[]>([]);
   const [enabledCarriers, setEnabledCarriers] = useState<string[]>([]);
+  /** Serialized request that produced the current results (null until first success). */
+  const [quotedRequestKey, setQuotedRequestKey] = useState<string | null>(null);
+  const [lastQuoteRequest, setLastQuoteRequest] =
+    useState<LifeQuoteRequest | null>(null);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+  /** Desktop (lg+): open by default so the quote form is visible on first visit; user can collapse anytime. */
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  /** After the first successful quote this mount, tuck the sidebar to the standard icon rail for results. */
+  const didAutoCollapseAfterFirstQuoteRef = useRef(false);
+  const [sidebarPanel, setSidebarPanel] = useState<"quote" | "compare">(
+    "quote"
+  );
 
   // Load company logos + admin settings on mount
   useEffect(() => {
@@ -92,12 +341,32 @@ export default function LifeInsuranceResults() {
     setIsLoading(true);
     setError(null);
     setComparisons([]);
-    setSelectedForCompare(new Set());
     setIsFinalExpense(!!request.isFinalExpense);
     setIssueFilter("all");
     try {
       const results = await fetchLifeQuotes(request);
       setComparisons(results);
+      setLastQuoteRequest(request);
+      setQuotedRequestKey(
+        JSON.stringify({
+          state: request.state,
+          birthMonth: request.birthMonth,
+          birthDay: request.birthDay,
+          birthYear: request.birthYear,
+          gender: request.gender,
+          smoker: request.smoker,
+          health: request.health,
+          category: request.category,
+          faceAmount: request.faceAmount,
+          mode: request.mode,
+          isFinalExpense: !!request.isFinalExpense,
+          compInc: request.compInc ?? "",
+        })
+      );
+      if (!didAutoCollapseAfterFirstQuoteRef.current) {
+        didAutoCollapseAfterFirstQuoteRef.current = true;
+        setSidebarExpanded(false);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to get quotes");
     } finally {
@@ -105,13 +374,40 @@ export default function LifeInsuranceResults() {
     }
   }
 
-  function toggleCompare(id: string) {
-    setSelectedForCompare((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  function toggleCompareFromCard(result: LifeQuoteResult) {
+    if (!lastQuoteRequest) return;
+    const request = lastQuoteRequest;
+    const snapId = compareSnapshotId(result, request);
+    const existingIdx = compareSnapshots.findIndex((s) => s.id === snapId);
+    if (existingIdx >= 0) {
+      setCompareSnapshots((prev) =>
+        prev.filter((_, i) => i !== existingIdx)
+      );
+      return;
+    }
+    if (compareSnapshots.length >= MAX_COMPARE_QUOTES) return;
+    const isFirstAdd = compareSnapshots.length === 0;
+    setCompareSnapshots((prev) => [
+      ...prev,
+      {
+        id: snapId,
+        result: { ...result },
+        request: { ...request },
+        isFinalExpense: !!request.isFinalExpense,
+      },
+    ]);
+    if (isFirstAdd) {
+      setSidebarExpanded(true);
+      setSidebarPanel("compare");
+    }
+  }
+
+  function removeCompareSnapshot(id: string) {
+    setCompareSnapshots((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function clearAllCompareSnapshots() {
+    setCompareSnapshots([]);
   }
 
   function parsePremium(val: string | null): number {
@@ -135,8 +431,10 @@ export default function LifeInsuranceResults() {
     return logos[compCode] || null;
   }
 
-  // Flatten all results for display
-  const allResults = comparisons.flatMap((c) => c.results);
+  // Flatten and drop blank Compulife rows (no premium / missing identity)
+  const allResults = comparisons
+    .flatMap((c) => c.results)
+    .filter(hasValidLifeQuoteResult);
 
   // Apply issue type filter when in final expense mode
   const filteredResults = isFinalExpense && issueFilter !== "all"
@@ -145,8 +443,8 @@ export default function LifeInsuranceResults() {
 
   // Sort by monthly premium if available, else annual
   const sortedResults = [...filteredResults].sort((a, b) => {
-    const aVal = parsePremium(a.premiumMonthly) || parsePremium(a.premiumAnnual);
-    const bVal = parsePremium(b.premiumMonthly) || parsePremium(b.premiumAnnual);
+    const aVal = premiumSortValue(a);
+    const bVal = premiumSortValue(b);
     return sortDir === "asc" ? aVal - bVal : bVal - aVal;
   });
 
@@ -155,35 +453,212 @@ export default function LifeInsuranceResults() {
   const siCount = allResults.filter((r) => r.issueType === "si").length;
   const unknownCount = allResults.filter((r) => r.issueType === "unknown").length;
 
-  const compareResults = allResults.filter((r) =>
-    selectedForCompare.has(r.compProdCode)
+  const compareModalColumns = useMemo(
+    () =>
+      compareSnapshots.map(({ result, request, isFinalExpense }) => ({
+        result,
+        request,
+        isFinalExpense,
+      })),
+    [compareSnapshots]
   );
+
+  useEffect(() => {
+    if (compareSnapshots.length < 2) setCompareModalOpen(false);
+  }, [compareSnapshots.length]);
+
+  useEffect(() => {
+    if (compareSnapshots.length === 0 && sidebarPanel === "compare") {
+      setSidebarPanel("quote");
+    }
+  }, [compareSnapshots.length, sidebarPanel]);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Form */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-20">
-              <h2 className="text-lg font-bold text-gray-800 mb-4">
-                Life Insurance Quote
-              </h2>
-              <LifeInsuranceForm
-                onSubmit={handleSubmit}
-                isLoading={isLoading}
-                enabledStates={enabledStates}
-                enabledCarriers={enabledCarriers}
-              />
-            </div>
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+          {/* Mobile / tablet: stacked cards (unchanged UX) */}
+          <div className="flex flex-col gap-4 w-full lg:hidden">
+            <LifeCompareQueueSection
+              showOuterCard
+              quotedRequestKey={quotedRequestKey}
+              compareSnapshots={compareSnapshots}
+              onOpenModal={() => setCompareModalOpen(true)}
+              onRemove={removeCompareSnapshot}
+              onClearAll={clearAllCompareSnapshots}
+            />
+            <LifeQuoteFormSection
+              showOuterCard
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              enabledStates={enabledStates}
+              enabledCarriers={enabledCarriers}
+              quotedRequestKey={quotedRequestKey}
+            />
           </div>
 
-          {/* Right: Results */}
-          <div className="lg:col-span-2 space-y-6">
+          {/* Desktop: collapsible sidebar (icon rail + panel) */}
+          <aside
+            className={`hidden lg:flex flex-col shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] transition-[width] duration-300 ease-in-out ${
+              sidebarExpanded ? "w-[min(24rem,calc(100vw-2rem))]" : "w-14"
+            }`}
+            aria-label="Quote and compare tools"
+          >
+            <div className="flex rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden w-full min-h-[min(28rem,calc(100vh-6rem))] max-h-[calc(100vh-5rem)]">
+              <nav
+                className="w-14 shrink-0 flex flex-col items-center gap-1.5 py-3 px-1 border-r border-gray-100 bg-white"
+                aria-hidden={false}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSidebarExpanded((e) => !e)}
+                  aria-expanded={sidebarExpanded}
+                  aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+                  title={sidebarExpanded ? "Collapse" : "Expand"}
+                  className="mb-1 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                >
+                  {sidebarExpanded ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-4 w-4"
+                      aria-hidden
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-4 w-4"
+                      aria-hidden
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSidebarExpanded(true);
+                    setSidebarPanel("quote");
+                  }}
+                  aria-label="Quote settings"
+                  title="Quote settings"
+                  className={`relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                    sidebarPanel === "quote"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "text-gray-500 hover:bg-gray-100"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    className="h-5 w-5"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </button>
+
+                {quotedRequestKey !== null && compareSnapshots.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSidebarExpanded(true);
+                      setSidebarPanel("compare");
+                    }}
+                    aria-label={`Compare quotes, ${compareSnapshots.length} selected`}
+                    title="Compare quotes"
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                      sidebarPanel === "compare"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "text-gray-500 hover:bg-gray-100"
+                    }`}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.75}
+                      className="h-5 w-5"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
+                      />
+                    </svg>
+                    {compareSnapshots.length > 0 && (
+                      <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[10px] font-bold text-white">
+                        {compareSnapshots.length}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </nav>
+
+              {sidebarExpanded && (
+                <div className="flex-1 min-w-0 overflow-y-auto overscroll-contain px-3.5 py-3 border-l border-gray-100/80">
+                  {sidebarPanel === "compare" && quotedRequestKey !== null ? (
+                    <LifeCompareQueueSection
+                      showOuterCard={false}
+                      quotedRequestKey={quotedRequestKey}
+                      compareSnapshots={compareSnapshots}
+                      onOpenModal={() => setCompareModalOpen(true)}
+                      onRemove={removeCompareSnapshot}
+                      onClearAll={clearAllCompareSnapshots}
+                    />
+                  ) : (
+                    <LifeQuoteFormSection
+                      showOuterCard={false}
+                      onSubmit={handleSubmit}
+                      isLoading={isLoading}
+                      enabledStates={enabledStates}
+                      enabledCarriers={enabledCarriers}
+                      quotedRequestKey={quotedRequestKey}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          </aside>
+
+          {/* Main: Results */}
+          <div className="w-full lg:flex-1 lg:min-w-0 space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-700">{error}</p>
               </div>
+            )}
+
+            {lastQuoteRequest && !isLoading && (
+              <p
+                className="text-sm text-gray-600 font-bold leading-snug break-words"
+                title={formatLifeQuoteRunSummary(lastQuoteRequest)}
+              >
+                Current Quote: {formatLifeQuoteRunSummary(lastQuoteRequest)}
+              </p>
             )}
 
             {isLoading && (
@@ -268,119 +743,46 @@ export default function LifeInsuranceResults() {
 
                 {/* Quote Cards */}
                 <div className="space-y-3">
-                  {sortedResults.map((result, idx) => (
-                    <LifeQuoteCard
-                      key={`${result.compProdCode}-${idx}`}
-                      result={result}
-                      isSelected={selectedForCompare.has(result.compProdCode)}
-                      onToggleCompare={() =>
-                        toggleCompare(result.compProdCode)
-                      }
-                      formatDollar={formatDollar}
-                      logoUrl={getLogoUrl(result.compProdCode)}
-                      showIssueType={isFinalExpense}
-                    />
-                  ))}
+                  {sortedResults.map((result) => {
+                    const snapId = lastQuoteRequest
+                      ? compareSnapshotId(result, lastQuoteRequest)
+                      : "";
+                    const rowKey = snapId || lifeQuoteRowId(result);
+                    return (
+                      <LifeQuoteCard
+                        key={rowKey}
+                        result={result}
+                        isSelected={
+                          !!snapId &&
+                          compareSnapshots.some((s) => s.id === snapId)
+                        }
+                        onToggleCompare={() => toggleCompareFromCard(result)}
+                        compareCheckDisabled={
+                          compareSnapshots.length >= MAX_COMPARE_QUOTES &&
+                          (!snapId ||
+                            !compareSnapshots.some((s) => s.id === snapId))
+                        }
+                        formatDollar={formatDollar}
+                        logoUrl={getLogoUrl(result.compProdCode)}
+                        showIssueType={isFinalExpense}
+                      />
+                    );
+                  })}
                 </div>
-
-                {/* Comparison */}
-                {compareResults.length >= 2 && (
-                  <div className="bg-white rounded-lg shadow-lg p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4">
-                      Side-by-Side Comparison ({compareResults.length})
-                    </h3>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b-2 border-gray-200">
-                            <th className="text-left py-2 pr-4 text-gray-600 font-semibold">
-                              Detail
-                            </th>
-                            {compareResults.map((r, i) => (
-                              <th
-                                key={i}
-                                className="text-left py-2 px-3 text-gray-800 font-semibold"
-                              >
-                                {r.company}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b border-gray-100">
-                            <td className="py-2 pr-4 text-gray-600">
-                              Product
-                            </td>
-                            {compareResults.map((r, i) => (
-                              <td key={i} className="py-2 px-3">
-                                {r.product.trim()}
-                              </td>
-                            ))}
-                          </tr>
-                          <tr className="border-b border-gray-100">
-                            <td className="py-2 pr-4 text-gray-600">
-                              AM Best
-                            </td>
-                            {compareResults.map((r, i) => (
-                              <td key={i} className="py-2 px-3">
-                                {r.amBestId}
-                              </td>
-                            ))}
-                          </tr>
-                          {compareResults.some((r) => r.premiumMonthly) && (
-                            <tr className="border-b border-gray-100">
-                              <td className="py-2 pr-4 text-gray-600">
-                                Monthly
-                              </td>
-                              {compareResults.map((r, i) => (
-                                <td
-                                  key={i}
-                                  className="py-2 px-3 font-bold text-emerald-700"
-                                >
-                                  {formatDollar(r.premiumMonthly)}
-                                </td>
-                              ))}
-                            </tr>
-                          )}
-                          <tr className="border-b border-gray-100">
-                            <td className="py-2 pr-4 text-gray-600">
-                              Annual
-                            </td>
-                            {compareResults.map((r, i) => (
-                              <td key={i} className="py-2 px-3 font-semibold">
-                                {formatDollar(r.premiumAnnual)}
-                              </td>
-                            ))}
-                          </tr>
-                          <tr className="border-b border-gray-100">
-                            <td className="py-2 pr-4 text-gray-600">
-                              Health Class
-                            </td>
-                            {compareResults.map((r, i) => (
-                              <td key={i} className="py-2 px-3 text-xs">
-                                {r.healthClass}
-                              </td>
-                            ))}
-                          </tr>
-                          {isFinalExpense && (
-                            <tr>
-                              <td className="py-2 pr-4 text-gray-600">
-                                Issue Type
-                              </td>
-                              {compareResults.map((r, i) => (
-                                <td key={i} className="py-2 px-3">
-                                  <IssueTypeBadge issueType={r.issueType} />
-                                </td>
-                              ))}
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
               </>
             )}
+
+            {!isLoading &&
+              !error &&
+              comparisons.length > 0 &&
+              allResults.length === 0 && (
+                <div className="bg-white rounded-lg shadow p-8 text-center">
+                  <p className="text-sm text-gray-600">
+                    No quotes included a usable premium. Try different
+                    coverage, health class, or product type.
+                  </p>
+                </div>
+              )}
 
             {!isLoading &&
               !error &&
@@ -395,6 +797,13 @@ export default function LifeInsuranceResults() {
               )}
           </div>
         </div>
+
+        <LifeCompareModal
+          open={compareModalOpen && compareSnapshots.length >= 2}
+          onClose={() => setCompareModalOpen(false)}
+          columns={compareModalColumns}
+          formatDollar={formatDollar}
+        />
       </div>
     </div>
   );
@@ -408,6 +817,7 @@ function LifeQuoteCard({
   result,
   isSelected,
   onToggleCompare,
+  compareCheckDisabled,
   formatDollar,
   logoUrl,
   showIssueType = false,
@@ -415,6 +825,7 @@ function LifeQuoteCard({
   result: LifeQuoteResult;
   isSelected: boolean;
   onToggleCompare: () => void;
+  compareCheckDisabled?: boolean;
   formatDollar: (val: string | null) => string;
   logoUrl: string | null;
   showIssueType?: boolean;
@@ -429,8 +840,8 @@ function LifeQuoteCard({
           : "border-transparent hover:border-gray-200"
       }`}
     >
-      <div className="flex items-start gap-4">
-        {/* Logo */}
+      <div className="flex items-center gap-4">
+        {/* Logo — left column, image centered in its box */}
         <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
           {logoUrl ? (
             <img
@@ -482,40 +893,78 @@ function LifeQuoteCard({
           )}
         </div>
 
-        {/* Pricing — Monthly big, annual small */}
-        <div className="text-right ml-4 flex-shrink-0">
-          {result.premiumMonthly ? (
-            <>
-              <p className="text-2xl font-bold text-emerald-700">
-                {formatDollar(result.premiumMonthly)}
-              </p>
-              <p className="text-xs text-gray-500">per month</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {formatDollar(result.premiumAnnual)}/yr
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-2xl font-bold text-emerald-700">
-                {formatDollar(result.premiumAnnual)}
-              </p>
-              <p className="text-xs text-gray-500">per year</p>
-            </>
-          )}
+        {/* Pricing + Compare — standard: monthly + annual; single/N-pay: modal amount only */}
+        <div className="ml-4 flex-shrink-0 flex flex-col items-end text-right">
+          {(() => {
+            const lp = parseLimitedPayPlan(
+              result.categoryTitle,
+              result.product
+            );
+            if (lp?.kind === "single") {
+              return (
+                <>
+                  <p className="text-sm text-gray-600">Single payment of</p>
+                  <p className="text-2xl font-bold text-emerald-700">
+                    {formatDollar(result.premiumAnnual)}
+                  </p>
+                </>
+              );
+            }
+            if (lp?.kind === "installment") {
+              return (
+                <>
+                  <p className="text-sm text-gray-600">
+                    {lp.count} payments of
+                  </p>
+                  <p className="text-2xl font-bold text-emerald-700">
+                    {formatDollar(result.premiumAnnual)}
+                  </p>
+                </>
+              );
+            }
+            if (result.premiumMonthly) {
+              return (
+                <>
+                  <p className="text-2xl font-bold text-emerald-700">
+                    {formatDollar(result.premiumMonthly)}
+                  </p>
+                  <p className="text-xs text-gray-500">per month</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {formatDollar(result.premiumAnnual)}/yr
+                  </p>
+                </>
+              );
+            }
+            return (
+              <>
+                <p className="text-2xl font-bold text-emerald-700">
+                  {formatDollar(result.premiumAnnual)}
+                </p>
+                <p className="text-xs text-gray-500">per year</p>
+              </>
+            );
+          })()}
+          <button
+            type="button"
+            aria-pressed={isSelected}
+            disabled={compareCheckDisabled && !isSelected}
+            onClick={onToggleCompare}
+            title={
+              compareCheckDisabled && !isSelected
+                ? `Maximum ${MAX_COMPARE_QUOTES} quotes in compare`
+                : isSelected
+                  ? "Remove from compare"
+                  : "Add to compare"
+            }
+            className={`mt-2 min-w-[6rem] px-2.5 py-1.5 rounded-md text-xs font-semibold border-2 shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${
+              isSelected
+                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700 hover:border-emerald-700 focus-visible:ring-emerald-500"
+                : "border-emerald-600 bg-white text-emerald-700 hover:bg-emerald-50 hover:border-emerald-700 focus-visible:ring-emerald-500 disabled:border-gray-300 disabled:bg-gray-50 disabled:text-gray-400 disabled:hover:bg-gray-50"
+            }`}
+          >
+            {isSelected ? "Comparing" : "Compare"}
+          </button>
         </div>
-      </div>
-
-      {/* Compare checkbox */}
-      <div className="mt-3 flex items-center justify-end border-t border-gray-100 pt-3">
-        <label className="flex items-center gap-2 cursor-pointer text-sm">
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onToggleCompare}
-            className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-          />
-          <span className="text-gray-600">Compare</span>
-        </label>
       </div>
     </div>
   );

@@ -4,7 +4,9 @@ import {
   County,
   MedigapPolicy,
   MAPlan,
+  MAPlanDetail,
   PDPPlan,
+  PDPPlanDetail,
   Drug,
   Pharmacy,
   Provider,
@@ -185,6 +187,42 @@ export async function fetchMAPlans(
   return fetchAllPlanPages("PLAN_TYPE_MAPD", zip, fips, year, npis, prescriptions) as Promise<MAPlan[]>;
 }
 
+/** Full plan detail for MA compare modal (fetch only when user opens full comparison). */
+export async function fetchPlanDetail(
+  year: string,
+  contractId: string,
+  planId: string,
+  segmentId: string
+): Promise<MAPlanDetail> {
+  const qs = new URLSearchParams({
+    year,
+    contract_id: contractId,
+    plan_id: planId,
+    segment_id: segmentId,
+  });
+  const res = await fetch(`/api/plan-detail?${qs.toString()}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const detail = body.detail || body.error || `Status ${res.status}`;
+    throw new Error(`Plan detail failed: ${detail}`);
+  }
+  const data = (await res.json()) as MAPlanDetail;
+  if (process.env.NODE_ENV === "development") {
+    console.log(`Plan detail for ${contractId}-${planId}-${segmentId}:`, data);
+  }
+  return data;
+}
+
+/** Same endpoint as MA plan detail; typed for PDP compare modal. */
+export async function fetchPDPPlanDetail(
+  year: string,
+  contractId: string,
+  planId: string,
+  segmentId: string
+): Promise<PDPPlanDetail> {
+  return fetchPlanDetail(year, contractId, planId, segmentId) as Promise<PDPPlanDetail>;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Part D (PDP)                                                      */
 /* ------------------------------------------------------------------ */
@@ -326,7 +364,6 @@ async function fetchLifeQuotesRaw(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       state: request.state,
-      zipCode: request.zipCode,
       birthMonth: request.birthMonth,
       birthDay: request.birthDay,
       birthYear: request.birthYear,
@@ -408,11 +445,12 @@ export async function fetchLifeQuotes(
       fetchLifeQuotesRaw(giwlRequest, "Y").catch(() => [] as LifeComparisonResponse[]),
     ]);
 
-    // UL products at final expense face amounts are effectively simplified issue
-    // unless the name detection already flagged them otherwise
+    // Z:8PQRSO is SI-only (Compulife excludes GIWL/Y from this code). Do not use
+    // name-based GI detection here — products often include "Graded" / "GIWL" in
+    // the label but are still the simplified-issue bucket, which produced false GI badges.
     for (const comp of ulResults) {
       for (const r of comp.results) {
-        if (r.issueType === "unknown") r.issueType = "si";
+        r.issueType = "si";
       }
     }
 

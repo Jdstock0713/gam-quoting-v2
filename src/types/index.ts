@@ -128,6 +128,12 @@ export type MAPlan = {
   enrollment_opt_in_status: boolean;
 };
 
+/**
+ * Raw JSON from Medicare.gov GET /plan/{year}/{contract_id}/{plan_id}/{segment_id}.
+ * Shape varies by plan type and year — treat as open object; UI parses defensively.
+ */
+export type MAPlanDetail = Record<string, unknown>;
+
 /* ------------------------------------------------------------------ */
 /*  Part D (Prescription Drug Plans)                                  */
 /* ------------------------------------------------------------------ */
@@ -163,6 +169,30 @@ export type PDPPlan = {
   calculated_monthly_premium: number;
   remaining_premium_and_drugs: number;
   enrollment_opt_in_status: boolean;
+};
+
+/** PDP plan detail from Medicare.gov GET /plan/{year}/{contract_id}/{plan_id}/{segment_id}. */
+export type PDPPlanDetail = Record<string, unknown>;
+
+/* ------------------------------------------------------------------ */
+/*  Per-pharmacy drug cost row (from search API)                      */
+/* ------------------------------------------------------------------ */
+
+export type PharmacyCostRow = {
+  pharmacyName: string;
+  networkTier: "Preferred" | "Standard" | "Non-preferred" | string;
+  estimatedAnnualCost: number;
+};
+
+/* ------------------------------------------------------------------ */
+/*  Drug coverage status per entered drug                             */
+/* ------------------------------------------------------------------ */
+
+export type DrugCoverageRow = {
+  drugName: string;
+  covered: boolean;
+  tier?: string;
+  restrictions?: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -215,7 +245,6 @@ export type Provider = {
 
 export type LifeQuoteRequest = {
   state: string;          // numeric state code (1-56)
-  zipCode: string;
   birthMonth: string;
   birthDay: string;
   birthYear: string;

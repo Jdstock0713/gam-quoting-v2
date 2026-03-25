@@ -1,15 +1,9 @@
 import { NextResponse } from "next/server";
-
-const COMPULIFE_API_BASE = "https://www.compulifeapi.com/api";
+import { compulifeGet } from "@/lib/compulife-proxy";
 
 export async function GET() {
   try {
-    const res = await fetch(`${COMPULIFE_API_BASE}/CompanyList/`, {
-      headers: {
-        "User-Agent": "GoldenAgeQuoting/1.0",
-        Accept: "*/*",
-      },
-    });
+    const res = await compulifeGet("/CompanyList/");
 
     if (!res.ok) {
       return NextResponse.json(

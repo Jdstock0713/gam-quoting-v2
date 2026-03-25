@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { PDPPlan, County } from "@/types";
-import { fetchPDPPlans } from "@/providers/quoteProvider";
+import { Fragment, useMemo, useState } from "react";
+import { PDPPlan, County, PDPPlanDetail } from "@/types";
+import { fetchPDPPlans, fetchPDPPlanDetail } from "@/providers/quoteProvider";
 import DrugSearch, { SelectedDrug } from "./DrugSearch";
 import PharmacyPicker from "./PharmacyPicker";
 import StepTracker from "./StepTracker";
+import PDPCompareModal from "./PDPCompareModal";
+
+const MAX_PDP_COMPARE = 3;
 
 type Props = {
   zip: string;
@@ -34,7 +37,14 @@ export default function PDPResults({ zip, county, onBack }: Props) {
   const [plans, setPlans] = useState<PDPPlan[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [pdpCompareOpen, setPdpCompareOpen] = useState(false);
+  const [pdpCompareLoading, setPdpCompareLoading] = useState(false);
+  const [pdpCompareDetails, setPdpCompareDetails] = useState<PDPPlanDetail[]>([]);
+  const [pdpComparePlans, setPdpComparePlans] = useState<PDPPlan[]>([]);
+  const [pdpCompareError, setPdpCompareError] = useState<string | null>(null);
+  const [filterCarriers, setFilterCarriers] = useState<string[]>([]);
+  const [filterStars, setFilterStars] = useState<(number | "nr")[]>([]);
   const [sortBy, setSortBy] = useState<"premium" | "deductible" | "stars" | "drugcost">(
     "premium"
   );
@@ -77,14 +87,75 @@ export default function PDPResults({ zip, county, onBack }: Props) {
 
   function toggleSelect(id: number) {
     setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= MAX_PDP_COMPARE) return prev;
+      return [...prev, id];
     });
   }
 
-  const sorted = [...plans].sort((a, b) => {
+  async function openFullPdpComparison() {
+    const ordered = selectedIds
+      .map((id) => plans.find((p) => p.id === id))
+      .filter((p): p is PDPPlan => !!p);
+    if (ordered.length < 2) return;
+
+    setPdpCompareError(null);
+    setPdpCompareLoading(true);
+    const year = ordered[0]?.contract_year ?? "2026";
+    try {
+      const details = await Promise.all(
+        ordered.map((p) =>
+          fetchPDPPlanDetail(year, p.contract_id, p.plan_id, p.segment_id)
+        )
+      );
+      setPdpComparePlans(ordered);
+      setPdpCompareDetails(details);
+      setPdpCompareOpen(true);
+    } catch (e) {
+      console.error("[PDPResults] Plan detail fetch:", e);
+      setPdpCompareError(
+        e instanceof Error ? e.message : "Failed to load plan details."
+      );
+      setPdpComparePlans([]);
+      setPdpCompareDetails([]);
+    } finally {
+      setPdpCompareLoading(false);
+    }
+  }
+
+  function closePdpCompare() {
+    setPdpCompareOpen(false);
+    setPdpCompareDetails([]);
+    setPdpComparePlans([]);
+    setPdpCompareError(null);
+  }
+
+  function starBucket(rating: number | undefined): number | "nr" {
+    const r = rating ?? 0;
+    if (r <= 0) return "nr";
+    return Math.round(r);
+  }
+
+  const carrierOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of plans) s.add(p.organization_name);
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [plans]);
+
+  const filteredPlans = useMemo(() => {
+    return plans.filter((p) => {
+      if (filterCarriers.length > 0 && !filterCarriers.includes(p.organization_name)) {
+        return false;
+      }
+      if (filterStars.length > 0) {
+        const b = starBucket(p.overall_star_rating?.rating);
+        if (!filterStars.includes(b)) return false;
+      }
+      return true;
+    });
+  }, [plans, filterCarriers, filterStars]);
+
+  const sorted = [...filteredPlans].sort((a, b) => {
     if (sortBy === "deductible")
       return a.drug_plan_deductible - b.drug_plan_deductible;
     if (sortBy === "stars")
@@ -97,13 +168,15 @@ export default function PDPResults({ zip, county, onBack }: Props) {
     return a.partd_premium - b.partd_premium;
   });
 
-  const totalPages = Math.ceil(sorted.length / ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
   const paginatedPlans = sorted.slice(
     currentPage * ITEMS_PER_PAGE,
     (currentPage + 1) * ITEMS_PER_PAGE
   );
 
-  const compared = plans.filter((p) => selectedIds.has(p.id));
+  const compared = selectedIds
+    .map((id) => plans.find((p) => p.id === id))
+    .filter((p): p is PDPPlan => !!p);
 
   const summaryParts: string[] = [];
   if (drugs.length > 0) summaryParts.push(`${drugs.length} drug(s)`);
@@ -222,32 +295,109 @@ export default function PDPResults({ zip, county, onBack }: Props) {
           <div>
             {/* Sort controls */}
             {!isLoading && plans.length > 0 && (
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => setWizardStep(1)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  &larr; Modify search criteria
-                </button>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-500">Sort by:</span>
-                  <select
-                    value={sortBy}
-                    onChange={(e) => {
-                      setSortBy(
-                        e.target.value as "premium" | "deductible" | "stars" | "drugcost"
-                      );
-                      setCurrentPage(0);
-                    }}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <button
+                    onClick={() => setWizardStep(1)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    <option value="premium">Monthly Premium</option>
-                    <option value="deductible">Deductible</option>
-                    <option value="stars">Star Rating</option>
-                    {drugs.length > 0 && (
-                      <option value="drugcost">Est. Total Cost</option>
-                    )}
-                  </select>
+                    &larr; Modify search criteria
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">Sort by:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => {
+                        setSortBy(
+                          e.target.value as "premium" | "deductible" | "stars" | "drugcost"
+                        );
+                        setCurrentPage(0);
+                      }}
+                      className="border border-gray-300 rounded px-2 py-1 text-sm"
+                    >
+                      <option value="premium">Monthly Premium</option>
+                      <option value="deductible">Deductible</option>
+                      <option value="stars">Star Rating</option>
+                      {drugs.length > 0 && (
+                        <option value="drugcost">Est. Total Cost</option>
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg p-3 text-sm">
+                  <p className="font-semibold text-gray-800 mb-2">Filters</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Insurance carriers</p>
+                      <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto">
+                        {carrierOptions.map((name) => (
+                          <label key={name} className="inline-flex items-center gap-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={filterCarriers.includes(name)}
+                              onChange={() => {
+                                setFilterCarriers((prev) =>
+                                  prev.includes(name)
+                                    ? prev.filter((x) => x !== name)
+                                    : [...prev, name]
+                                );
+                                setCurrentPage(0);
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="text-gray-700">{name}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {filterCarriers.length > 0 && (
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 mt-1 hover:underline"
+                          onClick={() => setFilterCarriers([])}
+                        >
+                          Clear carriers
+                        </button>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Star ratings</p>
+                      <div className="flex flex-wrap gap-2">
+                        {([5, 4, 3, 2, 1, "nr"] as const).map((s) => (
+                          <label key={String(s)} className="inline-flex items-center gap-1 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={filterStars.includes(s)}
+                              onChange={() => {
+                                setFilterStars((prev) =>
+                                  prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+                                );
+                                setCurrentPage(0);
+                              }}
+                              className="rounded border-gray-300"
+                            />
+                            <span className="text-gray-700">
+                              {s === "nr" ? "Not rated" : `${s}★`}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {filterStars.length > 0 && (
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 mt-1 hover:underline"
+                          onClick={() => setFilterStars([])}
+                        >
+                          Clear stars
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {filteredPlans.length < plans.length && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Showing {filteredPlans.length} of {plans.length} plans
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -270,17 +420,35 @@ export default function PDPResults({ zip, county, onBack }: Props) {
             {/* Comparison */}
             {compared.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <h2 className="text-lg font-semibold text-gray-800">
-                    Compare ({compared.length})
+                    Compare ({compared.length}/{MAX_PDP_COMPARE})
                   </h2>
-                  <button
-                    onClick={() => setSelectedIds(new Set())}
-                    className="text-sm text-red-600 hover:text-red-800 font-medium"
-                  >
-                    Clear
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={compared.length < 2 || pdpCompareLoading}
+                      onClick={openFullPdpComparison}
+                      className="px-4 py-2 text-sm font-semibold text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {pdpCompareLoading ? "Loading full comparison…" : "Full comparison"}
+                    </button>
+                    <button
+                      onClick={() => setSelectedIds([])}
+                      className="text-sm text-red-600 hover:text-red-800 font-medium px-2"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
+                {pdpCompareError && (
+                  <p className="text-sm text-red-600 mb-3">{pdpCompareError}</p>
+                )}
+                <p className="text-xs text-gray-500 mb-3">
+                  Quick summary — up to {MAX_PDP_COMPARE} plans. Use{" "}
+                  <span className="font-semibold">Full comparison</span> for Medicare.gov-style
+                  detail (premiums, deductibles, drug costs).
+                </p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
@@ -346,19 +514,26 @@ export default function PDPResults({ zip, county, onBack }: Props) {
             {!isLoading && plans.length > 0 && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                  Plans ({plans.length})
-                  {totalPages > 1 && (
+                  Plans ({filteredPlans.length}
+                  {filteredPlans.length !== plans.length ? ` of ${plans.length}` : ""})
+                  {sorted.length > 0 && totalPages > 1 && (
                     <span className="text-sm font-normal text-gray-500 ml-2">
                       — Page {currentPage + 1} of {totalPages}
                     </span>
                   )}
                 </h2>
+                {sorted.length === 0 ? (
+                  <p className="text-sm text-gray-600 py-6">
+                    No plans match the selected filters. Adjust filters to see results.
+                  </p>
+                ) : (
+                <Fragment>
                 <div className="grid gap-3">
                   {paginatedPlans.map((plan) => (
                     <div
                       key={plan.id}
                       className={`bg-white rounded-lg shadow p-4 border-2 transition-colors ${
-                        selectedIds.has(plan.id)
+                        selectedIds.includes(plan.id)
                           ? "border-blue-500"
                           : "border-transparent"
                       }`}
@@ -382,8 +557,13 @@ export default function PDPResults({ zip, county, onBack }: Props) {
                             )}
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            {plan.organization_name} &middot; {plan.contract_id}-
-                            {plan.plan_id}-{plan.segment_id}
+                            {plan.organization_name}
+                          </p>
+                          <p className="text-xs font-mono text-gray-700 mt-0.5 font-medium">
+                            Plan ID: {plan.contract_id}-{plan.plan_id}-{plan.segment_id}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1 italic">
+                            Includes: Only drug coverage
                           </p>
 
                           <div className="flex items-baseline gap-4 mt-2 flex-wrap">
@@ -411,35 +591,69 @@ export default function PDPResults({ zip, county, onBack }: Props) {
                         </div>
                         <input
                           type="checkbox"
-                          checked={selectedIds.has(plan.id)}
+                          checked={selectedIds.includes(plan.id)}
+                          disabled={
+                            !selectedIds.includes(plan.id) &&
+                            selectedIds.length >= MAX_PDP_COMPARE
+                          }
                           onChange={() => toggleSelect(plan.id)}
-                          className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1"
-                          title="Select for comparison"
+                          className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 disabled:opacity-40"
+                          title={
+                            selectedIds.length >= MAX_PDP_COMPARE &&
+                            !selectedIds.includes(plan.id)
+                              ? `Select up to ${MAX_PDP_COMPARE} plans`
+                              : "Select for comparison"
+                          }
                         />
                       </div>
 
-                      {plan.url && (
-                        <div className="mt-2">
-                          <a
-                            href={
-                              plan.url.startsWith("http")
-                                ? plan.url
-                                : `https://${plan.url}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            Visit carrier website &rarr;
-                          </a>
-                        </div>
+                      <div className="mt-2 flex flex-wrap gap-2 items-center">
+                        {plan.url && (
+                          <>
+                            <a
+                              href={
+                                plan.url.startsWith("http")
+                                  ? plan.url
+                                  : `https://${plan.url}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg"
+                            >
+                              Plan details
+                            </a>
+                            <a
+                              href={
+                                plan.url.startsWith("http")
+                                  ? plan.url
+                                  : `https://${plan.url}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                            >
+                              Enroll
+                            </a>
+                          </>
+                        )}
+                      </div>
+                      {pharmacyNpis.length === 0 && (
+                        <p className="text-xs text-gray-500 mt-2">
+                          Pharmacies: add your drugs &amp; pharmacies in the wizard for network-specific
+                          estimates.
+                        </p>
+                      )}
+                      {drugs.length === 0 && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Drugs: add your prescription drugs to compare estimated costs.
+                        </p>
                       )}
                     </div>
                   ))}
                 </div>
 
                 {/* Pagination controls */}
-                {totalPages > 1 && (
+                {sorted.length > 0 && totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 mt-6">
                     <button
                       onClick={() => setCurrentPage(0)}
@@ -474,11 +688,40 @@ export default function PDPResults({ zip, county, onBack }: Props) {
                     </button>
                   </div>
                 )}
+                </Fragment>
+                )}
               </div>
             )}
           </div>
         )}
       </main>
+      <PDPCompareModal
+        open={pdpCompareOpen}
+        onClose={closePdpCompare}
+        plans={pdpComparePlans}
+        planDetails={pdpCompareDetails}
+        zip={zip}
+        drugCount={drugs.length}
+        drugNames={drugs.map((d) => d.name)}
+        onRemovePlan={(planId) => {
+          const idx = pdpComparePlans.findIndex(
+            (p) => `${p.contract_id}-${p.plan_id}-${p.segment_id}` === planId
+          );
+          if (idx < 0) return;
+          const nextPlans = pdpComparePlans.filter((_, i) => i !== idx);
+          const nextDetails = pdpCompareDetails.filter((_, i) => i !== idx);
+          if (nextPlans.length < 2) {
+            closePdpCompare();
+          } else {
+            setPdpComparePlans(nextPlans);
+            setPdpCompareDetails(nextDetails);
+          }
+          setSelectedIds((prev) => {
+            const removedPlan = pdpComparePlans[idx];
+            return removedPlan ? prev.filter((id) => id !== removedPlan.id) : prev;
+          });
+        }}
+      />
     </div>
   );
 }

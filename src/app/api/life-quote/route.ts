@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const COMPULIFE_API_BASE = "https://www.compulifeapi.com/api";
-const DEV_AUTH_ID = "818BEFD20";
+import { compulifeGet, getCompulifeAuthId } from "@/lib/compulife-proxy";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,7 +23,7 @@ export async function POST(req: NextRequest) {
 
     // Build the COMPULIFE JSON payload
     const compulifePayload: Record<string, string> = {
-      COMPULIFEAUTHORIZATIONID: DEV_AUTH_ID,
+      COMPULIFEAUTHORIZATIONID: getCompulifeAuthId(),
       REMOTE_IP: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1",
       BirthMonth: birthMonth,
       Birthday: birthDay,
@@ -60,15 +58,9 @@ export async function POST(req: NextRequest) {
 
     const endpoint = requestType === "sidebyside" ? "sidebyside" : "request";
     const jsonStr = JSON.stringify(compulifePayload);
-    const url = `${COMPULIFE_API_BASE}/${endpoint}/?COMPULIFE=${encodeURIComponent(jsonStr)}`;
+    const path = `/${endpoint}/?COMPULIFE=${encodeURIComponent(jsonStr)}`;
 
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "User-Agent": "GoldenAgeQuoting/1.0",
-        Accept: "*/*",
-      },
-    });
+    const res = await compulifeGet(path);
 
     if (!res.ok) {
       const text = await res.text();

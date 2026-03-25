@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { County, PlanType, ProductLine } from "@/types";
 import ZipEntry from "@/components/ZipEntry";
+import ProductLineSegmentedControl from "@/components/ProductLineSegmentedControl";
 import MedigapResults from "@/components/MedigapResults";
 import MAResults from "@/components/MAResults";
 import PDPResults from "@/components/PDPResults";
@@ -51,7 +52,7 @@ export default function Home() {
       {/* Top Navigation Bar */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center h-14">
             <div className="flex items-center gap-3">
               <h1 className="text-lg font-bold text-gray-800">
                 Golden Age Quoting
@@ -85,85 +86,71 @@ export default function Home() {
                 </a>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <span
-                className={`text-sm font-medium ${
-                  productLine === "medicare" ? "text-blue-700" : "text-gray-400"
-                }`}
-              >
-                Medicare
-              </span>
-              <button
-                onClick={() =>
-                  setProductLine((p) =>
-                    p === "medicare" ? "life" : "medicare"
-                  )
-                }
-                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  productLine === "life"
-                    ? "bg-emerald-500 focus:ring-emerald-500"
-                    : "bg-blue-500 focus:ring-blue-500"
-                }`}
-                role="switch"
-                aria-checked={productLine === "life"}
-                aria-label="Toggle between Medicare and Life Insurance"
-              >
-                <span
-                  className={`inline-block h-5 w-5 rounded-full bg-white shadow transform transition-transform ${
-                    productLine === "life" ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-              <span
-                className={`text-sm font-medium ${
-                  productLine === "life"
-                    ? "text-emerald-700"
-                    : "text-gray-400"
-                }`}
-              >
-                Life Insurance
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Content */}
       {productLine === "life" ? (
-        <LifeInsuranceResults />
+        <>
+          <div className="flex justify-center bg-gray-50 px-4 pt-8 pb-3">
+            <div className="w-full max-w-lg">
+              <ProductLineSegmentedControl
+                productLine={productLine}
+                onChange={setProductLine}
+              />
+            </div>
+          </div>
+          <LifeInsuranceResults />
+        </>
       ) : (
         <>
           {state.step === "zip" && (
-            <ZipEntry onContinue={handleContinue} />
+            <div className="flex flex-col items-center pt-16 px-4">
+              <div className="w-full max-w-lg mb-4">
+                <ProductLineSegmentedControl
+                  productLine={productLine}
+                  onChange={setProductLine}
+                />
+              </div>
+              <ZipEntry onContinue={handleContinue} />
+            </div>
           )}
           {state.step === "results" && (() => {
             const { zip, county, planType } = state;
-            switch (planType) {
-              case "medigap":
-                return (
-                  <MedigapResults
-                    zip={zip}
-                    county={county}
-                    onBack={handleBack}
-                  />
-                );
-              case "ma":
-                return (
-                  <MAResults
-                    zip={zip}
-                    county={county}
-                    onBack={handleBack}
-                  />
-                );
-              case "pdp":
-                return (
-                  <PDPResults
-                    zip={zip}
-                    county={county}
-                    onBack={handleBack}
-                  />
-                );
-            }
+            const results =
+              planType === "medigap" ? (
+                <MedigapResults
+                  zip={zip}
+                  county={county}
+                  onBack={handleBack}
+                />
+              ) : planType === "ma" ? (
+                <MAResults
+                  zip={zip}
+                  county={county}
+                  onBack={handleBack}
+                />
+              ) : (
+                <PDPResults
+                  zip={zip}
+                  county={county}
+                  onBack={handleBack}
+                />
+              );
+            return (
+              <>
+                <div className="flex justify-center bg-gray-50 px-4 pt-4 pb-2 border-b border-gray-200/80">
+                  <div className="w-full max-w-lg">
+                    <ProductLineSegmentedControl
+                      productLine={productLine}
+                      onChange={setProductLine}
+                    />
+                  </div>
+                </div>
+                {results}
+              </>
+            );
           })()}
         </>
       )}
