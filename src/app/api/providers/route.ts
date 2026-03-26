@@ -72,6 +72,11 @@ function buildNameParams(fullName: string): { first_name?: string; last_name: st
   return { last_name: fullName + "*" };
 }
 
+/** Single-word query: build params that search by first name instead */
+function buildFirstNameParams(fullName: string): { first_name: string } {
+  return { first_name: fullName.trim() + "*" };
+}
+
 /** Strip a recognized cultural prefix from a last name. Returns null if no prefix found. */
 function stripSurnamePrefix(lastName: string): string | null {
   const match = lastName.match(SURNAME_PREFIXES);
@@ -110,7 +115,10 @@ export async function GET(request: NextRequest) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
-    // --- Primary search ---
+    const parts = name.trim().split(/\s+/);
+    const isSingleWord = parts.length === 1;
+
+    // --- Primary search (last_name, or first+last when multi-word) ---
     const baseParams = new URLSearchParams({
       version: "2.1",
       enumeration_type: "NPI-1",
@@ -127,10 +135,26 @@ export async function GET(request: NextRequest) {
     let allResults = primary.results;
     let totalCount = primary.count;
 
+    // --- Single-word: also search by first name and merge ---
+    if (isSingleWord) {
+      const firstParams = new URLSearchParams({
+        version: "2.1",
+        enumeration_type: "NPI-1",
+        limit,
+      });
+      const firstFields = buildFirstNameParams(name);
+      firstParams.set("first_name", firstFields.first_name);
+      if (state) firstParams.set("state", state);
+      if (zip) firstParams.set("postal_code", zip);
+
+      const firstNameResults = await queryNppes(firstParams, controller.signal);
+      allResults = [...firstNameResults.results, ...allResults];
+      totalCount = totalCount + firstNameResults.count;
+    }
+
     // --- Prefix-stripped retry if primary returned 0 results ---
-    if (primary.count === 0) {
-      const parts = name.trim().split(/\s+/);
-      const rawLastName = parts.length >= 2 ? parts.slice(1).join(" ") : name;
+    if (primary.count === 0 && !isSingleWord) {
+      const rawLastName = parts.slice(1).join(" ");
       const strippedLast = stripSurnamePrefix(rawLastName);
 
       if (strippedLast) {
@@ -140,16 +164,14 @@ export async function GET(request: NextRequest) {
           limit,
         });
 
-        if (parts.length >= 2) {
-          retryParams.set("first_name", parts[0] + "*");
-        }
+        retryParams.set("first_name", parts[0] + "*");
         retryParams.set("last_name", strippedLast + "*");
         if (state) retryParams.set("state", state);
         if (zip) retryParams.set("postal_code", zip);
 
         const retry = await queryNppes(retryParams, controller.signal);
-        allResults = retry.results;
-        totalCount = retry.count;
+        allResults = [...allResults, ...retry.results];
+        totalCount = totalCount + retry.count;
       }
     }
 

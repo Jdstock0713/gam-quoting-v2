@@ -20,7 +20,7 @@ import {
   buildBenefitRowTextsForPlan,
   extractPharmacyBreakdownFromPlan,
   extractStructuredExtraRows,
-  extractPharmacyCostTable,
+  mergePharmacyCostTables,
   extractDrugCoverageStatus,
   EXPLICIT_FEATURE_LOOKUPS,
 } from "@/lib/maPlanDetailParse";
@@ -79,10 +79,6 @@ function boolMark(v: boolean): ReactNode {
   ) : (
     <span className="text-red-500 font-bold">✗</span>
   );
-}
-
-function buildEnrollUrl(plan: MAPlan): string {
-  return `https://www.medicare.gov/plan-compare/#/enroll?plan_id=${plan.contract_id}-${plan.plan_id}-${plan.segment_id}&year=${plan.contract_year}&lang=en`;
 }
 
 function ChevronIcon({ expanded }: { expanded: boolean }) {
@@ -398,8 +394,8 @@ export default function MACompareModal({
   );
 
   const pharmacyCostTables = useMemo(
-    () => plans.map((plan) => extractPharmacyCostTable(plan)),
-    [plans]
+    () => plans.map((plan, i) => mergePharmacyCostTables(plan, planDetails[i])),
+    [plans, planDetails]
   );
 
   const drugCoveragePerPlan = useMemo(
@@ -506,36 +502,26 @@ export default function MACompareModal({
                         {formatCurrency(p.partc_premium + p.partd_premium)}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">{p.organization_name}</div>
-                      <div className="mt-2 flex flex-col gap-1.5 life-compare-no-print">
-                        <a
-                          href={buildEnrollUrl(p)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-block text-center w-full px-3 py-1.5 text-xs font-semibold rounded-lg bg-green-600 hover:bg-green-700 text-white transition-colors"
-                        >
-                          Enroll
-                        </a>
-                        {p.url && (
-                          <>
-                            <a
-                              href={p.url.startsWith("http") ? p.url : `https://${p.url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs font-medium text-blue-600 hover:underline"
-                            >
-                              Plan details →
-                            </a>
-                            <a
-                              href={p.url.startsWith("http") ? p.url : `https://${p.url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:underline"
-                            >
-                              View additional benefits
-                            </a>
-                          </>
-                        )}
-                      </div>
+                      {p.url && (
+                        <div className="mt-2 flex flex-col gap-1.5 life-compare-no-print">
+                          <a
+                            href={p.url.startsWith("http") ? p.url : `https://${p.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-medium text-blue-600 hover:underline"
+                          >
+                            Plan details →
+                          </a>
+                          <a
+                            href={p.url.startsWith("http") ? p.url : `https://${p.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            View additional benefits
+                          </a>
+                        </div>
+                      )}
                     </th>
                   ))}
                 </tr>
@@ -839,9 +825,13 @@ export default function MACompareModal({
                     <tr className="border-b border-gray-100 align-top">
                       <th
                         scope="row"
-                        className="compare-sticky-col text-left py-2 pr-3 pl-1 text-gray-600 font-medium sticky left-0 bg-white/90 z-[1] border-r print:static"
+                        className="compare-sticky-col text-left py-2 pr-3 pl-1 text-gray-600 font-medium sticky left-0 bg-white/90 z-[1] border-r print:static align-top"
                       >
-                        Drug &amp; premium costs by pharmacy
+                        <div>Drug &amp; premium costs by pharmacy</div>
+                        <p className="mt-1 text-[10px] font-normal text-gray-400 leading-snug max-w-[11rem]">
+                          You included drugs and pharmacies; this table uses both plan-search and plan-detail payloads.
+                          If a cell is still “—”, Medicare did not return per-pharmacy rows for that specific plan.
+                        </p>
                       </th>
                       {pharmacyCostTables.map((rows, ci) => {
                         const costStrings = pharmacyCostTables.map((r) =>

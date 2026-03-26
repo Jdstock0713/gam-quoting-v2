@@ -55,7 +55,7 @@ export default function CarrierSettings({
         {allCarriers.map((carrier) => (
           <label
             key={carrier}
-            className="flex items-center gap-2 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer py-1"
           >
             <input
               type="checkbox"

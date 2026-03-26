@@ -1,23 +1,45 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Pharmacy } from "@/types";
+import { Pharmacy, SelectedPharmacy, MAIL_ORDER_PHARMACY_NPI } from "@/types";
 import { searchPharmacies } from "@/providers/quoteProvider";
 
-/** Medicare.gov uses this sentinel value for mail order pharmacy */
-const MAIL_ORDER_NPI = "MAIL_ORDER";
 const INITIAL_VISIBLE = 12;
 const LOAD_MORE_INCREMENT = 12;
+/** Total selections allowed, including mail order (Medicare.gov-style cap for drug pricing). */
+const MAX_PHARMACY_SELECTIONS = 5;
+
+function pharmacyToSelected(p: Pharmacy): SelectedPharmacy {
+  return {
+    npi: p.npi,
+    name: p.name,
+    street: p.street,
+    city: p.city,
+    state: p.state,
+    zipcode: p.zipcode,
+    distance_miles: Number.isFinite(p.distance_miles) ? p.distance_miles : null,
+  };
+}
+
+const MAIL_ORDER_ENTRY: SelectedPharmacy = {
+  npi: MAIL_ORDER_PHARMACY_NPI,
+  name: "Mail order pharmacy",
+  street: "",
+  city: "",
+  state: "",
+  zipcode: "",
+  distance_miles: null,
+};
 
 type Props = {
   zip: string;
-  selectedNpis: string[];
-  onSelectionChange: (npis: string[]) => void;
+  selectedPharmacies: SelectedPharmacy[];
+  onSelectionChange: (pharmacies: SelectedPharmacy[]) => void;
 };
 
 export default function PharmacyPicker({
   zip,
-  selectedNpis,
+  selectedPharmacies,
   onSelectionChange,
 }: Props) {
   const [allPharmacies, setAllPharmacies] = useState<Pharmacy[]>([]);
@@ -71,11 +93,18 @@ export default function PharmacyPicker({
   }, [zip]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function togglePharmacy(npi: string) {
-    if (selectedNpis.includes(npi)) {
-      onSelectionChange(selectedNpis.filter((n) => n !== npi));
-    } else {
-      onSelectionChange([...selectedNpis, npi]);
+    if (selectedPharmacies.some((p) => p.npi === npi)) {
+      onSelectionChange(selectedPharmacies.filter((p) => p.npi !== npi));
+      return;
     }
+    if (selectedPharmacies.length >= MAX_PHARMACY_SELECTIONS) return;
+    if (npi === MAIL_ORDER_PHARMACY_NPI) {
+      onSelectionChange([...selectedPharmacies, MAIL_ORDER_ENTRY]);
+      return;
+    }
+    const row = allPharmacies.find((p) => p.npi === npi);
+    if (!row) return;
+    onSelectionChange([...selectedPharmacies, pharmacyToSelected(row)]);
   }
 
   function handleAddressSearch() {
@@ -91,7 +120,9 @@ export default function PharmacyPicker({
     }
   }
 
-  const mailOrderSelected = selectedNpis.includes(MAIL_ORDER_NPI);
+  const mailOrderSelected = selectedPharmacies.some((p) => p.npi === MAIL_ORDER_PHARMACY_NPI);
+  const atSelectionMax = selectedPharmacies.length >= MAX_PHARMACY_SELECTIONS;
+  const mailOrderCheckboxDisabled = !mailOrderSelected && atSelectionMax;
   const visible = allPharmacies.slice(0, visibleCount);
   const hasMore = visibleCount < allPharmacies.length;
 
@@ -105,22 +136,27 @@ export default function PharmacyPicker({
       </label>
       <p className="text-xs text-gray-500 mb-3">
         Adding pharmacies helps find plans with the best drug pricing at your
-        local stores.
+        local stores. You can select up to {MAX_PHARMACY_SELECTIONS} pharmacies
+        total, including mail order.
       </p>
 
       {/* Mail Order Pharmacy — always visible at the top */}
       <label
-        className={`flex items-start gap-2 p-3 rounded-lg cursor-pointer border mb-3 transition-colors ${
+        className={`flex items-start gap-2 p-3 rounded-lg border mb-3 transition-colors ${
+          mailOrderCheckboxDisabled ? "cursor-not-allowed opacity-60 bg-gray-50 border-gray-200" : "cursor-pointer"
+        } ${
           mailOrderSelected
             ? "bg-blue-50 border-blue-300"
-            : "bg-white border-gray-200 hover:bg-gray-50"
+            : !mailOrderCheckboxDisabled && "bg-white border-gray-200 hover:bg-gray-50"
         }`}
       >
         <input
           type="checkbox"
           checked={mailOrderSelected}
-          onChange={() => togglePharmacy(MAIL_ORDER_NPI)}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5"
+          disabled={mailOrderCheckboxDisabled}
+          onChange={() => togglePharmacy(MAIL_ORDER_PHARMACY_NPI)}
+          title={mailOrderCheckboxDisabled ? `Select up to ${MAX_PHARMACY_SELECTIONS} pharmacies` : undefined}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5 disabled:opacity-50"
         />
         <div className="flex-1">
           <div className="text-sm font-medium text-gray-800 flex items-center gap-2">
@@ -217,18 +253,23 @@ export default function PharmacyPicker({
             )}
           </div>
           <div className="space-y-1 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-2">
-            {visible.map((pharm) => (
+            {visible.map((pharm) => {
+              const rowSelected = selectedPharmacies.some((p) => p.npi === pharm.npi);
+              const rowDisabled = !rowSelected && atSelectionMax;
+              return (
               <label
                 key={pharm.npi}
-                className={`flex items-start gap-2 p-2 rounded cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedNpis.includes(pharm.npi) ? "bg-blue-50" : ""
-                }`}
+                className={`flex items-start gap-2 p-2 rounded transition-colors ${
+                  rowDisabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-gray-50"
+                } ${rowSelected ? "bg-blue-50" : ""}`}
               >
                 <input
                   type="checkbox"
-                  checked={selectedNpis.includes(pharm.npi)}
+                  checked={rowSelected}
+                  disabled={rowDisabled}
                   onChange={() => togglePharmacy(pharm.npi)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5"
+                  title={rowDisabled ? `Select up to ${MAX_PHARMACY_SELECTIONS} pharmacies` : undefined}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-0.5 disabled:opacity-50"
                 />
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-800">
@@ -242,7 +283,8 @@ export default function PharmacyPicker({
                   </div>
                 </div>
               </label>
-            ))}
+            );
+            })}
           </div>
 
           {/* Load more button */}
@@ -262,10 +304,15 @@ export default function PharmacyPicker({
         </>
       )}
 
-      {selectedNpis.length > 0 && (
+      {selectedPharmacies.length > 0 && (
         <p className="text-xs text-blue-600 mt-2 font-medium">
-          {selectedNpis.length} pharmacy(s) selected
+          {selectedPharmacies.length} of {MAX_PHARMACY_SELECTIONS} selected
           {mailOrderSelected && " (includes mail order)"}
+        </p>
+      )}
+      {atSelectionMax && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-2">
+          Maximum reached. Deselect a pharmacy to add a different one.
         </p>
       )}
     </div>

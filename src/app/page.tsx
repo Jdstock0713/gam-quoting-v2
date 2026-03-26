@@ -9,6 +9,19 @@ import MAResults from "@/components/MAResults";
 import PDPResults from "@/components/PDPResults";
 import LifeInsuranceResults from "@/components/LifeInsuranceResults";
 
+function AppLogo() {
+  return (
+    <div className="flex justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/images/GAM_Logo.svg.svg"
+        alt="Golden Age Marketing"
+        className="h-20 sm:h-28 md:h-32 lg:h-40 w-auto"
+      />
+    </div>
+  );
+}
+
 type AppState =
   | { step: "zip" }
   | { step: "results"; zip: string; county: County; planType: PlanType };
@@ -17,18 +30,21 @@ export default function Home() {
   const [productLine, setProductLine] = useState<ProductLine>("medicare");
   const [state, setState] = useState<AppState>({ step: "zip" });
   const [isAdmin, setIsAdmin] = useState(false);
+  const [lastZip, setLastZip] = useState<string | undefined>();
+  const [lastCounty, setLastCounty] = useState<County | undefined>();
 
-  // Listen for Wix postMessage with user role info
   useEffect(() => {
+    const ALLOWED_ORIGINS = /^https:\/\/([a-z0-9-]+\.)*(wixsite\.com|wix\.com|editorx\.io)$/;
+
     function handleMessage(event: MessageEvent) {
-      // Accept messages from any Wix origin (covers preview & live domains)
+      if (!ALLOWED_ORIGINS.test(event.origin)) return;
+
       if (
         event.data &&
         event.data.type === "wix-user-role" &&
         typeof event.data.role === "string"
       ) {
         const role = event.data.role.toLowerCase();
-        // Show admin button for collaborators, owners, or admins
         if (["collaborator", "owner", "admin"].includes(role)) {
           setIsAdmin(true);
         }
@@ -40,6 +56,8 @@ export default function Home() {
   }, []);
 
   function handleContinue(zip: string, county: County, planType: PlanType) {
+    setLastZip(zip);
+    setLastCounty(county);
     setState({ step: "results", zip, county, planType });
   }
 
@@ -90,70 +108,77 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Content */}
-      {productLine === "life" ? (
-        <>
-          <div className="flex justify-center bg-gray-50 px-4 pt-8 pb-3">
-            <div className="w-full max-w-lg">
+      {/* Content — both product lines stay mounted so form/wizard state survives tab switches */}
+      <div
+        className={productLine === "medicare" ? undefined : "hidden"}
+        aria-hidden={productLine !== "medicare"}
+      >
+        {state.step === "zip" && (
+          <div className="flex flex-col items-center pt-0 px-4">
+            <AppLogo />
+            <div className="w-full max-w-lg mb-4">
               <ProductLineSegmentedControl
                 productLine={productLine}
                 onChange={setProductLine}
               />
             </div>
+            <ZipEntry onContinue={handleContinue} initialZip={lastZip} initialCounty={lastCounty} />
           </div>
-          <LifeInsuranceResults />
-        </>
-      ) : (
-        <>
-          {state.step === "zip" && (
-            <div className="flex flex-col items-center pt-16 px-4">
-              <div className="w-full max-w-lg mb-4">
-                <ProductLineSegmentedControl
-                  productLine={productLine}
-                  onChange={setProductLine}
-                />
-              </div>
-              <ZipEntry onContinue={handleContinue} />
-            </div>
-          )}
-          {state.step === "results" && (() => {
-            const { zip, county, planType } = state;
-            const results =
-              planType === "medigap" ? (
-                <MedigapResults
-                  zip={zip}
-                  county={county}
-                  onBack={handleBack}
-                />
-              ) : planType === "ma" ? (
-                <MAResults
-                  zip={zip}
-                  county={county}
-                  onBack={handleBack}
-                />
-              ) : (
-                <PDPResults
-                  zip={zip}
-                  county={county}
-                  onBack={handleBack}
-                />
-              );
-            return (
-              <>
-                <div className="flex justify-center bg-gray-50 px-4 pt-4 pb-2 border-b border-gray-200/80">
-                  <div className="w-full max-w-lg">
-                    <ProductLineSegmentedControl
-                      productLine={productLine}
-                      onChange={setProductLine}
-                    />
-                  </div>
-                </div>
-                {results}
-              </>
+        )}
+        {state.step === "results" && (() => {
+          const { zip, county, planType } = state;
+          const results =
+            planType === "medigap" ? (
+              <MedigapResults
+                zip={zip}
+                county={county}
+                onBack={handleBack}
+              />
+            ) : planType === "ma" ? (
+              <MAResults
+                zip={zip}
+                county={county}
+                onBack={handleBack}
+              />
+            ) : (
+              <PDPResults
+                zip={zip}
+                county={county}
+                onBack={handleBack}
+              />
             );
-          })()}
-        </>
-      )}
+          return (
+            <>
+              <div className="flex flex-col items-center bg-gray-50 px-4 pt-4 pb-2 border-b border-gray-200/80">
+                <AppLogo />
+                <div className="w-full max-w-lg">
+                  <ProductLineSegmentedControl
+                    productLine={productLine}
+                    onChange={setProductLine}
+                  />
+                </div>
+              </div>
+              {results}
+            </>
+          );
+        })()}
+      </div>
+
+      <div
+        className={productLine === "life" ? undefined : "hidden"}
+        aria-hidden={productLine !== "life"}
+      >
+        <div className="flex flex-col items-center bg-gray-50 px-4 pt-0 pb-3">
+          <AppLogo />
+          <div className="w-full max-w-lg">
+            <ProductLineSegmentedControl
+              productLine={productLine}
+              onChange={setProductLine}
+            />
+          </div>
+        </div>
+        <LifeInsuranceResults />
+      </div>
     </div>
   );
 }

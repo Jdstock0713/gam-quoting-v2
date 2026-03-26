@@ -51,9 +51,10 @@ export async function compulifeGet(
   }
 }
 
-/**
- * Returns the auth ID from env var, falling back to the default.
- */
 export function getCompulifeAuthId(): string {
-  return process.env.COMPULIFE_AUTH_ID || "818BEFD20";
+  const id = process.env.COMPULIFE_AUTH_ID;
+  if (!id) {
+    throw new Error("COMPULIFE_AUTH_ID environment variable is required");
+  }
+  return id;
 }

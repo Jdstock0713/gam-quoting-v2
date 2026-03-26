@@ -68,7 +68,7 @@ export default function QuoteForm({ onSubmit, isLoading, initialZip }: Props) {
         </select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* ZIP Code */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">

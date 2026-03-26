@@ -223,6 +223,20 @@ export type Pharmacy = {
   distance_miles: number;
 };
 
+/** Sentinel NPI for mail-order option in PharmacyPicker (Medicare.gov convention) */
+export const MAIL_ORDER_PHARMACY_NPI = "MAIL_ORDER" as const;
+
+/** Pharmacy row stored when user selects stores (for APIs + summary UI) */
+export type SelectedPharmacy = {
+  npi: string;
+  name: string;
+  street: string;
+  city: string;
+  state: string;
+  zipcode: string;
+  distance_miles: number | null;
+};
+
 /* ------------------------------------------------------------------ */
 /*  Provider / Physician Lookup  (via NPPES NPI Registry)             */
 /* ------------------------------------------------------------------ */

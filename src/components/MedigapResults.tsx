@@ -113,7 +113,7 @@ export default function MedigapResults({ zip, county, onBack }: Props) {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
           <div>
             <button
               onClick={onBack}
@@ -121,7 +121,7 @@ export default function MedigapResults({ zip, county, onBack }: Props) {
             >
               &larr; Back to plan selection
             </button>
-            <h1 className="text-xl font-bold text-gray-800">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-800">
               Medigap (Medicare Supplement)
             </h1>
             <p className="text-xs text-gray-500">
@@ -140,7 +140,7 @@ export default function MedigapResults({ zip, county, onBack }: Props) {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-6">
             <QuoteForm
               onSubmit={handleSubmit}
@@ -148,17 +148,19 @@ export default function MedigapResults({ zip, county, onBack }: Props) {
               initialZip={zip}
             />
             {showSettings && (
-              <CarrierSettings
-                allCarriers={allCarriers}
-                selectedCarriers={selectedCarriers}
-                onToggleCarrier={handleToggleCarrier}
-                onSelectAll={handleSelectAllCarriers}
-                onClearAll={handleClearAllCarriers}
-              />
+              <div className="hidden md:block">
+                <CarrierSettings
+                  allCarriers={allCarriers}
+                  selectedCarriers={selectedCarriers}
+                  onToggleCarrier={handleToggleCarrier}
+                  onSelectAll={handleSelectAllCarriers}
+                  onClearAll={handleClearAllCarriers}
+                />
+              </div>
             )}
           </div>
 
-          <div className="lg:col-span-2 space-y-6">
+          <div className="md:col-span-2 space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">
                 {error}
@@ -179,6 +181,18 @@ export default function MedigapResults({ zip, county, onBack }: Props) {
               onToggleSort={() => setSortAscending(!sortAscending)}
             />
           </div>
+
+          {showSettings && (
+            <div className="md:hidden">
+              <CarrierSettings
+                allCarriers={allCarriers}
+                selectedCarriers={selectedCarriers}
+                onToggleCarrier={handleToggleCarrier}
+                onSelectAll={handleSelectAllCarriers}
+                onClearAll={handleClearAllCarriers}
+              />
+            </div>
+          )}
         </div>
       </main>
 

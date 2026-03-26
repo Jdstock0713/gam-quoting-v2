@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { PDPPlan, PDPPlanDetail, PharmacyCostRow, DrugCoverageRow } from "@/types";
-import { extractPharmacyBreakdownFromPlan, extractPharmacyCostTable } from "@/lib/maPlanDetailParse";
+import { extractPharmacyBreakdownFromPlan, mergePharmacyCostTables } from "@/lib/maPlanDetailParse";
 import {
   extractDrugFormulary,
   extractPDPDrugSection,
@@ -246,7 +246,8 @@ export default function PDPCompareModal({
 
   const tierSummaryTexts = useMemo(
     () =>
-      planDetails.map((d) => {
+      plans.map((plan, i) => {
+        const d = planDetails[i];
         const f = extractDrugFormulary(d);
         const lines: string[] = [];
         if (f.tieredCosts?.length) {
@@ -259,14 +260,24 @@ export default function PDPCompareModal({
         const ph = extractPharmacyDetails(d);
         if (ph.mailOrder90Day === true) lines.push("Mail order (90-day): Yes");
         if (ph.preferredPharmacyNetwork === true) lines.push("Preferred pharmacy network: Yes");
+        if (!lines.length) {
+          const pkg = (d?.package_services ?? null) as Record<string, unknown> | null;
+          const outpatientRx = pkg?.outpatient_prescription;
+          if (outpatientRx !== undefined && outpatientRx !== null && String(outpatientRx).trim()) {
+            lines.push(`Outpatient prescription service: ${String(outpatientRx)}`);
+          }
+          if (plan.drug_plan_deductible > 0) {
+            lines.push(`Drug deductible: ${formatCurrency(plan.drug_plan_deductible)}`);
+          }
+        }
         return lines.length ? lines.join("\n") : "—";
       }),
-    [planDetails]
+    [plans, planDetails]
   );
 
   const pharmacyCostTables = useMemo(
-    () => plans.map((plan) => extractPharmacyCostTable(plan)),
-    [plans]
+    () => plans.map((plan, i) => mergePharmacyCostTables(plan, planDetails[i])),
+    [plans, planDetails]
   );
 
   const drugCoveragePerPlan = useMemo(

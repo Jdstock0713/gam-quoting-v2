@@ -48,13 +48,15 @@ export async function POST(request: NextRequest) {
     let body = "{}";
     try {
       const incoming = await request.json();
+      if (incoming && typeof incoming === "object" && !Array.isArray(incoming)) {
+        delete (incoming as Record<string, unknown>).pharmacies;
+      }
       body = JSON.stringify(incoming);
     } catch {
       // Empty body is fine
     }
 
     const path = `/plans/search?${qs.toString()}`;
-    console.log("[plans-search] Proxy path:", path);
 
     const upstream = await medicarePost(path, body);
 
@@ -62,19 +64,17 @@ export async function POST(request: NextRequest) {
       const errText = await upstream.text();
       console.error("[plans-search] Upstream error:", upstream.status, errText.substring(0, 500));
       return NextResponse.json(
-        { error: `Medicare.gov returned ${upstream.status}`, detail: errText.substring(0, 1000) },
+        { error: `Medicare plan search returned an error (${upstream.status})` },
         { status: 502 }
       );
     }
 
     const data = await upstream.json();
-    console.log("[plans-search] Got plans:", data.plans?.length ?? 0);
     return NextResponse.json(data);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown";
-    console.error("[plans-search] Exception:", msg);
+    console.error("[plans-search] Exception:", e instanceof Error ? e.message : e);
     return NextResponse.json(
-      { error: `Failed to fetch plans: ${msg}` },
+      { error: "Failed to fetch plans" },
       { status: 502 }
     );
   }

@@ -1,84 +1,52 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { County, PlanType } from "@/types";
-
-// #region agent log
-function dbgZip(
-  location: string,
-  message: string,
-  data: Record<string, unknown>,
-  hypothesisId: string
-) {
-  if (typeof window === "undefined") return;
-  const payload = {
-    sessionId: "0abe76",
-    location,
-    message,
-    data,
-    timestamp: Date.now(),
-    hypothesisId,
-    runId: "post-fix3",
-  };
-  const body = JSON.stringify(payload);
-  const logUrl = `${window.location.origin}/api/debug-client-log`;
-  fetch(logUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-  }).catch(() => {});
-  fetch("http://127.0.0.1:7787/ingest/3f234bfc-a343-4891-ab87-dfc2801c4edd", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Debug-Session-Id": "0abe76",
-    },
-    body,
-  }).catch(() => {});
-}
-// #endregion
 
 type Props = {
   onContinue: (zip: string, county: County, planType: PlanType) => void;
+  initialZip?: string;
+  initialCounty?: County;
 };
 
-const PLAN_TYPE_OPTIONS: { value: PlanType; label: string; desc: string }[] = [
+const PLAN_TYPE_OPTIONS: { value: PlanType; label: string; icon: string }[] = [
   {
     value: "medigap",
     label: "Medigap (Medicare Supplement)",
-    desc: "Supplemental insurance that helps pay costs Original Medicare doesn't cover",
+    icon: "/images/icon-medigap.png",
   },
   {
     value: "ma",
     label: "Medicare Advantage (Part C)",
-    desc: "An all-in-one alternative to Original Medicare, often including drug coverage",
+    icon: "/images/icon-ma.png",
   },
   {
     value: "pdp",
     label: "Part D (Prescription Drug)",
-    desc: "Standalone prescription drug coverage to add to Original Medicare",
+    icon: "/images/icon-pdp.png",
   },
 ];
 
-export default function ZipEntry({ onContinue }: Props) {
+export default function ZipEntry({ onContinue, initialZip, initialCounty }: Props) {
   const zipInputRef = useRef<HTMLInputElement>(null);
-  const [zip, setZip] = useState("");
-  const [county, setCounty] = useState<County | null>(null);
-  const [allCounties, setAllCounties] = useState<County[]>([]);
+  const [zip, setZip] = useState(initialZip ?? "");
+  const [county, setCounty] = useState<County | null>(initialCounty ?? null);
+  const [allCounties, setAllCounties] = useState<County[]>(initialCounty ? [initialCounty] : []);
   const [selectedPlanType, setSelectedPlanType] = useState<PlanType | null>(
     null
   );
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // #region agent log
   useEffect(() => {
-    dbgZip("ZipEntry.tsx:mount", "ZipEntry mounted", {}, "H5");
-    return () => {
-      dbgZip("ZipEntry.tsx:unmount", "ZipEntry unmounted", {}, "H5");
-    };
-  }, []);
-  // #endregion
+    if (initialZip && zipInputRef.current) {
+      zipInputRef.current.value = initialZip;
+    }
+    if (!initialZip) {
+      zipInputRef.current?.focus();
+    }
+  }, [initialZip]);
 
   /** Uncontrolled input: read DOM first (embeds / dev tools often desync `value` + state). */
   function digitsFromField(): string {
@@ -89,27 +57,7 @@ export default function ZipEntry({ onContinue }: Props) {
 
   async function handleZipLookup() {
     const digits = digitsFromField();
-    // #region agent log
-    dbgZip(
-      "ZipEntry.tsx:handleZipLookup:entry",
-      "lookup invoked",
-      {
-        digitsLen: digits.length,
-        stateZipLen: zip.length,
-        refLen: zipInputRef.current?.value?.length ?? -1,
-      },
-      "H1"
-    );
-    // #endregion
     if (digits.length !== 5) {
-      // #region agent log
-      dbgZip(
-        "ZipEntry.tsx:handleZipLookup:shortZip",
-        "bailing: not 5 digits",
-        { digitsLen: digits.length },
-        "H2"
-      );
-      // #endregion
       setError("Enter a complete 5-digit ZIP code, then click Look Up.");
       setZip(digits);
       zipInputRef.current?.focus();
@@ -123,24 +71,8 @@ export default function ZipEntry({ onContinue }: Props) {
     const ac = new AbortController();
     const t = window.setTimeout(() => ac.abort(), 25000);
     try {
-      // #region agent log
-      dbgZip(
-        "ZipEntry.tsx:handleZipLookup:fetchStart",
-        "calling /api/counties",
-        { digitsLen: digits.length },
-        "H3"
-      );
-      // #endregion
       const apiUrl = `${window.location.origin}/api/counties?zipcode=${encodeURIComponent(digits)}`;
       const res = await fetch(apiUrl, { signal: ac.signal });
-      // #region agent log
-      dbgZip(
-        "ZipEntry.tsx:handleZipLookup:fetchResponse",
-        "fetch returned",
-        { ok: res.ok, status: res.status },
-        "H3"
-      );
-      // #endregion
       if (!res.ok) throw new Error("Failed to look up ZIP code");
       const data = await res.json();
       const counties = data.counties ?? [];
@@ -150,17 +82,6 @@ export default function ZipEntry({ onContinue }: Props) {
       setAllCounties(counties);
       setCounty(counties[0]);
     } catch (e) {
-      // #region agent log
-      dbgZip(
-        "ZipEntry.tsx:handleZipLookup:catch",
-        "lookup error",
-        {
-          name: e instanceof Error ? e.name : "unknown",
-          message: e instanceof Error ? e.message : String(e),
-        },
-        "H3"
-      );
-      // #endregion
       const msg =
         e instanceof Error && e.name === "AbortError"
           ? "Look up timed out. Check your connection and try again."
@@ -184,12 +105,12 @@ export default function ZipEntry({ onContinue }: Props) {
 
   return (
     <div className="flex items-start justify-center w-full max-w-lg relative z-10">
-      <div className="bg-white rounded-lg shadow-lg p-8 w-full">
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">
-          Golden Age Quoting
+      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-8 w-full">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 text-center">
+          Medicare Quoting
         </h1>
-        <p className="text-sm text-gray-500 mb-6">
-          Medicare plan data sourced from Medicare.gov
+        <p className="text-sm text-gray-500 mb-6 text-center">
+          Powered by Medicare.gov
         </p>
 
         {/* Step 1: ZIP Code */}
@@ -200,14 +121,6 @@ export default function ZipEntry({ onContinue }: Props) {
           <form
             className="flex flex-wrap sm:flex-nowrap gap-2 items-stretch"
             onSubmit={(e) => {
-              // #region agent log
-              dbgZip(
-                "ZipEntry.tsx:form:onSubmit",
-                "form submit",
-                {},
-                "H1"
-              );
-              // #endregion
               e.preventDefault();
               void handleZipLookup();
             }}
@@ -223,35 +136,11 @@ export default function ZipEntry({ onContinue }: Props) {
               onChange={(e) => {
                 const v = e.target.value.replace(/\D/g, "").slice(0, 5);
                 if (e.target.value !== v) e.target.value = v;
-                // #region agent log
-                dbgZip(
-                  "ZipEntry.tsx:input:onChange",
-                  "zip input change",
-                  {
-                    vLen: v.length,
-                    rawLen: e.target.value.length,
-                  },
-                  "H2"
-                );
-                // #endregion
                 setZip(v);
                 setCounty(null);
                 setAllCounties([]);
                 setSelectedPlanType(null);
                 setError(null);
-              }}
-              onFocus={() => {
-                // #region agent log
-                dbgZip(
-                  "ZipEntry.tsx:input:onFocus",
-                  "zip input focus",
-                  {
-                    stateZipLen: zip.length,
-                    refValLen: zipInputRef.current?.value?.length ?? -1,
-                  },
-                  "H2"
-                );
-                // #endregion
               }}
               placeholder="12345"
               aria-describedby="zip-entry-hint"
@@ -326,18 +215,25 @@ export default function ZipEntry({ onContinue }: Props) {
                 <button
                   type="button"
                   key={opt.value}
-                  onClick={() => setSelectedPlanType(opt.value)}
-                  className={`w-full text-left rounded-lg border-2 p-4 transition-colors ${
+                  onClick={() => {
+                    setSelectedPlanType(opt.value);
+                    if (county) onContinue(digitsFromField(), county, opt.value);
+                  }}
+                  className={`w-full text-left rounded-lg border-2 px-3 py-2 transition-colors flex items-center gap-3 ${
                     selectedPlanType === opt.value
                       ? "border-blue-500 bg-blue-50"
                       : "border-gray-200 hover:border-gray-300 bg-white"
                   }`}
                 >
-                  <div className="font-semibold text-gray-800 text-sm">
+                  <Image
+                    src={opt.icon}
+                    alt=""
+                    width={72}
+                    height={72}
+                    className="shrink-0"
+                  />
+                  <div className="flex-1 text-center font-semibold text-gray-800 text-base">
                     {opt.label}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    {opt.desc}
                   </div>
                 </button>
               ))}
@@ -345,16 +241,6 @@ export default function ZipEntry({ onContinue }: Props) {
           </div>
         )}
 
-        {/* Continue button */}
-        {county && selectedPlanType && (
-          <button
-            type="button"
-            onClick={handleContinue}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Continue
-          </button>
-        )}
       </div>
     </div>
   );

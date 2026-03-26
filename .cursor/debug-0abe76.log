@@ -146,3 +146,265 @@
 {"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774448602493,"hypothesisId":"H5","runId":"post-fix3"}
 {"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774448602495,"hypothesisId":"H5","runId":"post-fix3"}
 {"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774448916435,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774454710767,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774454710770,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774454710770,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774454711637,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774466685465,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466685468,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774466685469,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466686039,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466701200,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774466702496,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774466716102,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466717647,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774466729589,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466729591,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774466729592,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466730926,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774466749151,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774466766377,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774466772485,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774466772503,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774466772512,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774466772520,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774466772527,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774466784577,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774466784587,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774466784582,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774466785142,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774466855726,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467546960,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467546962,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467546962,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774467547791,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467549357,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467764219,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467764223,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467764222,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467765301,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467782582,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467782585,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467782584,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467794000,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467794004,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467794004,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467808665,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467808662,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467808666,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467809175,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467809179,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774467809180,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774467809794,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467810405,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774467891718,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774468549984,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774468549988,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774468549988,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774468840762,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774468840764,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774468840765,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774468840949,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774468846955,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774468932859,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774468932861,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774468932862,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774468933786,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774468934842,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774468934947,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774468935137,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774468935296,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774468935396,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774468936516,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774468936517,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774468936518,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774468936784,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774468937069,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774468937073,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774468939170,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469338571,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469338574,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469338575,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774469339414,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774469339970,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774469340075,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774469340205,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774469340353,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774469340434,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774469341557,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774469341558,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774469341560,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774469341707,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774469341905,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774469341910,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469343270,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469564499,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469564502,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469564502,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774469565915,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":0,"stateZipLen":0,"refLen":0},"timestamp":1774469565916,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:shortZip","message":"bailing: not 5 digits","data":{"digitsLen":0},"timestamp":1774469565917,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774469565918,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774469567137,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774469567229,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774469567374,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774469567517,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774469567580,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774469569711,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774469569712,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774469569713,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774469569873,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774469570117,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774469570121,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469573045,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469573352,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469573354,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469573355,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469574403,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469574406,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469574407,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774469575093,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774469585905,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774469710722,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774469711569,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774469711670,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774469711838,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774469711987,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774469712083,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774469713142,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774469713143,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774469713143,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774469713196,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774469713431,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774469713434,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469715045,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469754152,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469754158,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469754160,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469756673,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774469756675,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774469756676,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774470131997,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774470132804,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774470132896,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774470133074,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774470133245,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774470133304,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774470134464,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774470134465,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774470134465,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774470134618,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774470134808,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774470134811,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774470137839,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774470137840,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774470137841,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774470137891,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774470137960,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774470137965,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774470139186,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774470388735,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774470388737,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774470388738,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774470389512,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774470390326,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774470390437,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774470390622,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774470390762,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774470390874,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774470391947,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774470391948,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774470391949,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774470392102,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774470392210,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774470392214,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774470393825,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774470445392,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774470445394,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774470445395,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774470446701,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774470447409,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774470447500,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774470447671,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774470447816,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774470448808,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774470450168,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774470450170,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774470450170,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774470450234,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774470450367,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774470450371,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774470451794,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471101645,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471101649,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471101650,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471102121,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471102130,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471102132,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471166090,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471166095,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471166094,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774471166485,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774471167367,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774471167461,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774471167706,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774471167881,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774471167964,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774471169206,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774471169207,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774471169208,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774471169505,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774471169792,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774471169796,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471171815,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471198243,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471198245,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471198246,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774471396029,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774471396873,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774471396984,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774471397162,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774471397293,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774471397382,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774471398541,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774471398542,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774471398543,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774471398724,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774471398905,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774471398908,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471400530,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471539319,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471539323,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774471539324,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774471540097,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774471540792,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774471540882,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774471541049,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774471541129,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774471541241,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774471542380,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774471542382,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774471542383,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774471542601,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774471543006,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774471543014,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774471546620,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774472492575,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774472492577,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774472492578,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onFocus","message":"zip input focus","data":{"stateZipLen":0,"refValLen":0},"timestamp":1774472493320,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":1,"rawLen":1},"timestamp":1774472494086,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":2,"rawLen":2},"timestamp":1774472494199,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":3,"rawLen":3},"timestamp":1774472494365,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":4,"rawLen":4},"timestamp":1774472494509,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:input:onChange","message":"zip input change","data":{"vLen":5,"rawLen":5},"timestamp":1774472494571,"hypothesisId":"H2","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:form:onSubmit","message":"form submit","data":{},"timestamp":1774472495901,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:entry","message":"lookup invoked","data":{"digitsLen":5,"stateZipLen":5,"refLen":5},"timestamp":1774472495902,"hypothesisId":"H1","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchStart","message":"calling /api/counties","data":{"digitsLen":5},"timestamp":1774472495903,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"counties/route.ts:GET","message":"counties request","data":{"zipcodeLen":5},"timestamp":1774472496065,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"counties/route.ts:success","message":"counties ok","data":{"countyCount":1},"timestamp":1774472496140,"hypothesisId":"H4","runId":"post-fix"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:handleZipLookup:fetchResponse","message":"fetch returned","data":{"ok":true,"status":200},"timestamp":1774472496146,"hypothesisId":"H3","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774472497876,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774482540271,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:unmount","message":"ZipEntry unmounted","data":{},"timestamp":1774482540282,"hypothesisId":"H5","runId":"post-fix3"}
+{"sessionId":"0abe76","location":"ZipEntry.tsx:mount","message":"ZipEntry mounted","data":{},"timestamp":1774482540284,"hypothesisId":"H5","runId":"post-fix3"}

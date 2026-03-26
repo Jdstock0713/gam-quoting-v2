@@ -1,6 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { compulifeGet, getCompulifeAuthId } from "@/lib/compulife-proxy";
 
+function validateDob(month: unknown, day: unknown, year: unknown): string | null {
+  const m = Number(month);
+  const d = Number(day);
+  const y = Number(year);
+  if (!Number.isInteger(m) || m < 1 || m > 12) return "Invalid birth month";
+  if (!Number.isInteger(d) || d < 1 || d > 31) return "Invalid birth day";
+  if (!Number.isInteger(y) || y < 1900 || y > new Date().getFullYear()) return "Invalid birth year";
+
+  const dob = new Date(y, m - 1, d);
+  if (dob.getMonth() !== m - 1 || dob.getDate() !== d) return "Invalid date";
+  if (dob > new Date()) return "Birth date cannot be in the future";
+
+  const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+  if (age < 18) return "Must be at least 18 years old";
+  if (age > 120) return "Invalid birth year";
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -16,12 +34,16 @@ export async function POST(req: NextRequest) {
       category,
       faceAmount,
       mode,
-      requestType = "request", // "request" or "sidebyside"
-      compInc,   // optional: comma-separated company codes to include
-      prodDis,   // optional: comma-separated product codes to disable
+      requestType = "request",
+      compInc,
+      prodDis,
     } = body;
 
-    // Build the COMPULIFE JSON payload
+    const dobError = validateDob(birthMonth, birthDay, birthYear);
+    if (dobError) {
+      return NextResponse.json({ error: dobError }, { status: 400 });
+    }
+
     const compulifePayload: Record<string, string> = {
       COMPULIFEAUTHORIZATIONID: getCompulifeAuthId(),
       REMOTE_IP: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1",
@@ -64,19 +86,20 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const text = await res.text();
+      console.error("[life-quote] Upstream error:", res.status, text.substring(0, 500));
       return NextResponse.json(
-        { error: `Compulife API error: ${res.status}`, details: text },
-        { status: res.status }
+        { error: `Life quote service returned an error (${res.status})` },
+        { status: 502 }
       );
     }
 
     const data = await res.json();
     return NextResponse.json(data);
   } catch (e) {
-    console.error("Life quote API error:", e);
+    console.error("[life-quote] Exception:", e instanceof Error ? e.message : e);
     return NextResponse.json(
       { error: "Failed to fetch life insurance quotes" },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }

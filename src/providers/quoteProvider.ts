@@ -134,13 +134,23 @@ async function fetchAllPlanPages(
   prescriptions: { rxcui: string; ndc?: string; quantity: number; frequency: string }[]
 ): Promise<unknown[]> {
   const body: Record<string, unknown> = {};
-  if (npis.length > 0) body.npis = npis;
+  if (npis.length > 0) {
+    // Medicare accepts NPI arrays for pharmacy-specific drug pricing.
+    body.npis = npis;
+  }
   if (prescriptions.length > 0) {
-    body.prescriptions = prescriptions.map((p) => ({
-      ndc: p.ndc || p.rxcui,
-      quantity: p.quantity,
-      frequency: p.frequency,
-    }));
+    // Medicare plans/search currently validates prescription items strictly.
+    // NDC is accepted; rxcui is rejected as an unknown field.
+    const ndcOnly = prescriptions
+      .filter((p) => !!p.ndc)
+      .map((p) => ({
+        ndc: p.ndc as string,
+        quantity: p.quantity,
+        frequency: p.frequency,
+      }));
+    if (ndcOnly.length > 0) {
+      body.prescriptions = ndcOnly;
+    }
   }
 
   // Fetch first page to get total count
@@ -207,6 +217,10 @@ export async function fetchPlanDetail(
     throw new Error(`Plan detail failed: ${detail}`);
   }
   const data = (await res.json()) as MAPlanDetail;
+  const normalized = (data as Record<string, unknown>)?.plan_card;
+  if (normalized && typeof normalized === "object" && !Array.isArray(normalized)) {
+    return normalized as MAPlanDetail;
+  }
   if (process.env.NODE_ENV === "development") {
     console.log(`Plan detail for ${contractId}-${planId}-${segmentId}:`, data);
   }

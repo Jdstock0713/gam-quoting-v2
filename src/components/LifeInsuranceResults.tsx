@@ -18,6 +18,27 @@ import LifeCompareModal from "./LifeCompareModal";
 
 const MAX_COMPARE_QUOTES = 5;
 
+function LogoWithFallback({ logoUrl, company }: { logoUrl: string | null; company: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!logoUrl || failed) {
+    return (
+      <div className="w-20 h-20 bg-gray-100 rounded flex items-center justify-center text-gray-400 text-sm font-bold">
+        {company.substring(0, 2).toUpperCase()}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={logoUrl}
+      alt={company}
+      className="max-w-full max-h-full object-contain"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 /** Frozen at checkbox time — premiums & request context do not change when the user re-quotes */
 type CompareSnapshot = {
   id: string;
@@ -473,12 +494,41 @@ export default function LifeInsuranceResults() {
     }
   }, [compareSnapshots.length, sidebarPanel]);
 
+  const hasQuoted = quotedRequestKey !== null;
+
+  if (!hasQuoted) {
+    return (
+      <div className="bg-gray-50">
+        <div className="flex flex-col items-center px-4 pt-4 pb-12">
+          <div className="w-full max-w-lg">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 text-center">
+                Life Insurance Quoting
+              </h1>
+              <p className="text-sm text-gray-500 mb-6 text-center">
+                Powered by Compulife
+              </p>
+              <LifeInsuranceForm
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+                enabledStates={enabledStates}
+                enabledCarriers={enabledCarriers}
+                quotedRequestKey={quotedRequestKey}
+                density="comfortable"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="flex flex-col md:flex-row gap-6 items-start">
           {/* Mobile / tablet: stacked cards (unchanged UX) */}
-          <div className="flex flex-col gap-4 w-full lg:hidden">
+          <div className="flex flex-col gap-4 w-full md:hidden">
             <LifeCompareQueueSection
               showOuterCard
               quotedRequestKey={quotedRequestKey}
@@ -499,7 +549,7 @@ export default function LifeInsuranceResults() {
 
           {/* Desktop: collapsible sidebar (icon rail + panel) */}
           <aside
-            className={`hidden lg:flex flex-col shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] transition-[width] duration-300 ease-in-out ${
+            className={`hidden md:flex flex-col shrink-0 sticky top-20 self-start max-h-[calc(100vh-5rem)] transition-[width] duration-300 ease-in-out ${
               sidebarExpanded ? "w-[min(24rem,calc(100vw-2rem))]" : "w-14"
             }`}
             aria-label="Quote and compare tools"
@@ -645,7 +695,7 @@ export default function LifeInsuranceResults() {
           </aside>
 
           {/* Main: Results */}
-          <div className="w-full lg:flex-1 lg:min-w-0 space-y-6">
+          <div className="w-full md:flex-1 md:min-w-0 space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <p className="text-sm text-red-700">{error}</p>
@@ -842,21 +892,11 @@ function LifeQuoteCard({
     >
       <div className="flex items-center gap-4">
         {/* Logo — left column, image centered in its box */}
-        <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={result.company}
-              className="max-w-full max-h-full object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : (
-            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-400 text-xs font-bold">
-              {result.company.substring(0, 2).toUpperCase()}
-            </div>
-          )}
+        <div className="flex-shrink-0 w-28 h-20 flex items-center justify-center">
+          <LogoWithFallback
+            logoUrl={logoUrl}
+            company={result.company}
+          />
         </div>
 
         {/* Company & Product Info */}

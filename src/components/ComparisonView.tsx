@@ -24,7 +24,7 @@ export default function ComparisonView({ quotes, onClear }: Props) {
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-xs sm:text-sm">
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-2 pr-4 font-medium text-gray-600">
@@ -44,7 +44,7 @@ export default function ComparisonView({ quotes, onClear }: Props) {
           <tbody>
             {quotes.map((q) => (
               <tr key={q.id} className="border-b border-gray-100">
-                <td className="py-2 pr-4 font-medium text-gray-800">
+                <td className="py-2 pr-4 font-medium text-gray-800 max-w-[120px] sm:max-w-none truncate sm:whitespace-normal">
                   {q.carrier}
                 </td>
                 <td className="py-2 pr-4 text-gray-600">Plan {q.plan}</td>

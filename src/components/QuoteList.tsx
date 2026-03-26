@@ -46,7 +46,7 @@ export default function QuoteList({
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800">
           Quotes ({quotes.length})
           {totalPages > 1 && (
             <span className="text-sm font-normal text-gray-500 ml-2">
@@ -64,6 +64,15 @@ export default function QuoteList({
           Price {sortAscending ? "↑ Low to High" : "↓ High to Low"}
         </button>
       </div>
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+          <button onClick={() => setCurrentPage(0)} disabled={currentPage === 0} className="hidden sm:inline-flex px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0">First</button>
+          <button onClick={() => setCurrentPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0} className="px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0">&larr; Prev</button>
+          <span className="px-4 py-1.5 text-sm font-semibold text-blue-600">{currentPage + 1} / {totalPages}</span>
+          <button onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1} className="px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0">Next &rarr;</button>
+          <button onClick={() => setCurrentPage(totalPages - 1)} disabled={currentPage >= totalPages - 1} className="hidden sm:inline-flex px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0">Last</button>
+        </div>
+      )}
       <div className="grid gap-3">
         {paginated.map((quote) => (
           <QuoteCard
@@ -78,18 +87,18 @@ export default function QuoteList({
 
       {/* Pagination controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
           <button
             onClick={() => setCurrentPage(0)}
             disabled={currentPage === 0}
-            className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="hidden sm:inline-flex px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0"
           >
             First
           </button>
           <button
             onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
             disabled={currentPage === 0}
-            className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0"
           >
             &larr; Prev
           </button>
@@ -99,14 +108,14 @@ export default function QuoteList({
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={currentPage >= totalPages - 1}
-            className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0"
           >
             Next &rarr;
           </button>
           <button
             onClick={() => setCurrentPage(totalPages - 1)}
             disabled={currentPage >= totalPages - 1}
-            className="px-3 py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="hidden sm:inline-flex px-3 py-2 sm:py-1.5 text-sm font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px] sm:min-h-0"
           >
             Last
           </button>

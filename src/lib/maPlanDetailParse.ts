@@ -37,31 +37,213 @@ function formatFeatureKey(k: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/* ------------------------------------------------------------------ */
+/*  Medicare enum / label humanization                                 */
+/* ------------------------------------------------------------------ */
+
+const TIER_LABELS: Record<string, string> = {
+  COST_SHARE_TIER_PREFERRED_GENERIC: "Preferred Generic",
+  COST_SHARE_TIER_GENERIC: "Generic",
+  COST_SHARE_TIER_PREFERRED_BRAND: "Preferred Brand",
+  COST_SHARE_TIER_NON_PREFERRED_DRUG: "Non-Preferred Drug",
+  COST_SHARE_TIER_SPECIALTY_TIER: "Specialty Tier",
+  COST_SHARE_TIER_SELECT_CARE_DRUGS: "Select Care Drugs",
+  COST_SHARE_TIER_INJECTABLE_DRUGS: "Injectable Drugs",
+};
+
+function humanizeMedicareEnum(raw: string): string {
+  if (!raw || typeof raw !== "string") return raw;
+  const known = TIER_LABELS[raw];
+  if (known) return known;
+  return raw
+    .replace(/^(SB_CAT_|SB_|BENEFIT_|SUPPLEMENTAL_|COST_SHARE_TIER_|AVAILABILITY_|NETWORK_TYPE_|PLAN_CATEGORY_|PLAN_TYPE_)/i, "")
+    .replace(/_/g, " ")
+    .replace(/\b[A-Z]{2,}\b/g, (w) => w.charAt(0) + w.slice(1).toLowerCase())
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\bOopc\b/i, "Out-of-Pocket")
+    .replace(/\bVbid\b/i, "VBID")
+    .replace(/\bUf\b/i, "UF")
+    .replace(/\bSsbci\b/i, "SSBCI")
+    .replace(/\bPers\b/i, "PERS")
+    .replace(/\bDme\b/i, "DME")
+    .replace(/\bOtc\b/i, "OTC")
+    .replace(/\bN\/a\b/i, "N/A")
+    .trim();
+}
+
+function humanizeCoverage(raw: string): string {
+  if (!raw) return "";
+  const map: Record<string, string> = {
+    SB_COVERAGE_SOME_COVERAGE: "Covered",
+    SB_COVERAGE_NOT_COVERED: "Not covered",
+    SB_COVERAGE_FULL_COVERAGE: "Fully covered",
+  };
+  return map[raw] ?? humanizeMedicareEnum(raw);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Structured formatters for Medicare plan detail shapes              */
+/* ------------------------------------------------------------------ */
+
+function formatDrugTierPhase(phase: Record<string, unknown>): string {
+  const tiers = phase.tiers;
+  if (!Array.isArray(tiers) || !tiers.length) return "—";
+  const lines: string[] = [];
+  for (const t of tiers) {
+    if (!t || typeof t !== "object") continue;
+    const o = t as Record<string, unknown>;
+    const label = humanizeMedicareEnum(String(o.label ?? ""));
+    const prefRetail = o.preferred_retail as Record<string, unknown> | undefined;
+    const stdRetail = o.standard_retail as Record<string, unknown> | undefined;
+    const costs: string[] = [];
+    const d30 = prefRetail?.days_30 ?? stdRetail?.days_30;
+    const d90 = prefRetail?.days_90 ?? stdRetail?.days_90;
+    if (d30 && String(d30).trim()) costs.push(`30-day: ${d30}`);
+    if (d90 && String(d90).trim()) costs.push(`90-day: ${d90}`);
+    if (costs.length) lines.push(`${label}: ${costs.join(", ")}`);
+    else lines.push(label);
+  }
+  return lines.join("\n");
+}
+
+export function formatAbstractBenefits(ab: Record<string, unknown>): ExtraSectionRow[] {
+  const out: ExtraSectionRow[] = [];
+  const section = "Drug cost-sharing";
+  const initial = ab.initial_coverage as Record<string, unknown> | undefined;
+  if (initial) {
+    out.push({ section, label: "Initial coverage", text: formatDrugTierPhase(initial) });
+  }
+  const gap = ab.coverage_gap;
+  if (gap && typeof gap === "object" && !Array.isArray(gap)) {
+    out.push({ section, label: "Coverage gap (donut hole)", text: formatDrugTierPhase(gap as Record<string, unknown>) });
+  }
+  const cat = ab.catastrophic;
+  if (cat && typeof cat === "object" && !Array.isArray(cat)) {
+    out.push({ section, label: "Catastrophic coverage", text: formatDrugTierPhase(cat as Record<string, unknown>) });
+  }
+  return out;
+}
+
+function formatSbCostInfo(info: Record<string, unknown>): string {
+  const parts: string[] = [];
+  const copayMin = info.copay_min as number | null;
+  const copayMax = info.copay_max as number | null;
+  if (copayMin != null || copayMax != null) {
+    const a = copayMin ?? 0;
+    const b = copayMax ?? 0;
+    parts.push(a === b ? `$${a} copay` : `$${a}-$${b} copay`);
+  }
+  const coinsMin = info.coins_min_pct as number | null;
+  const coinsMax = info.coins_max_pct as number | null;
+  if (coinsMin != null || coinsMax != null) {
+    const a = coinsMin ?? 0;
+    const b = coinsMax ?? 0;
+    parts.push(a === b ? `${a}% coinsurance` : `${a}-${b}% coinsurance`);
+  }
+  if (info.authorization_required === true) parts.push("prior auth");
+  if (info.referral_required === true) parts.push("referral");
+  return parts.length ? parts.join(", ") : "";
+}
+
+function formatSupplementalBenefits(sb: Record<string, unknown>): ExtraSectionRow[] {
+  const out: ExtraSectionRow[] = [];
+  const section = "Supplemental benefits";
+  const buckets = [
+    ...(Array.isArray(sb.other_benefits) ? sb.other_benefits : []),
+    ...(Array.isArray(sb.special_benefits) ? sb.special_benefits : []),
+    ...(Array.isArray(sb.mmp_benefits) ? sb.mmp_benefits : []),
+  ];
+  for (const cat of buckets) {
+    if (!cat || typeof cat !== "object") continue;
+    const c = cat as Record<string, unknown>;
+    const catLabel = humanizeMedicareEnum(String(c.category ?? ""));
+    const benefits = Array.isArray(c.benefits) ? c.benefits : [];
+    const lines: string[] = [];
+    for (const b of benefits) {
+      if (!b || typeof b !== "object") continue;
+      const bo = b as Record<string, unknown>;
+      const name = humanizeMedicareEnum(String(bo.benefit ?? ""));
+      const cov = humanizeCoverage(String(bo.coverage ?? ""));
+      const info = bo.info as Record<string, unknown> | null;
+      const costDetail = info ? formatSbCostInfo(info) : "";
+      const detail = [cov, costDetail].filter(Boolean).join(" — ");
+      lines.push(detail ? `${name}: ${detail}` : name);
+    }
+    if (lines.length) {
+      out.push({ section, label: catLabel, text: lines.join("\n") });
+    }
+  }
+  return out;
+}
+
+function formatOptionalBenefits(opt: unknown[]): ExtraSectionRow[] {
+  const out: ExtraSectionRow[] = [];
+  const section = "Optional supplemental packages";
+  for (const item of opt) {
+    if (!item || typeof item !== "object") continue;
+    const o = item as Record<string, unknown>;
+    const pkgNum = o.package_number ?? "—";
+    const premium = o.monthly_premium ?? "—";
+    const deductible = o.deductible ?? "—";
+    const benefitList = Array.isArray(o.benefits)
+      ? o.benefits.map((b: unknown) => humanizeMedicareEnum(String(b))).join(", ")
+      : "—";
+    out.push({
+      section,
+      label: `Package ${pkgNum}`,
+      text: `Monthly premium: ${premium}\nDeductible: ${deductible}\nIncludes: ${benefitList}`,
+    });
+  }
+  return out;
+}
+
+function formatPackageBenefits(pb: Record<string, unknown>): ExtraSectionRow[] {
+  const out: ExtraSectionRow[] = [];
+  const section = "Plan cost limits";
+  for (const [rawKey, val] of Object.entries(pb)) {
+    if (!val || typeof val !== "object") continue;
+    const label = humanizeMedicareEnum(rawKey);
+    const v = val as Record<string, unknown>;
+    const networkCosts = v.network_costs as Record<string, unknown> | undefined;
+    if (!networkCosts) continue;
+    const lines: string[] = [];
+    for (const [netType, netVal] of Object.entries(networkCosts)) {
+      if (!netVal || typeof netVal !== "object") continue;
+      const n = netVal as Record<string, unknown>;
+      const costShare = String(n.cost_share ?? "—").replace(/<br\s*\/?>/gi, "; ");
+      const prefix = netType === "NETWORK_TYPE_NA" ? "" : `${humanizeMedicareEnum(netType)}: `;
+      lines.push(`${prefix}${costShare}`);
+    }
+    out.push({ section, label, text: lines.join("\n") });
+  }
+  return out;
+}
+
 /** Medicare.gov-aligned benefit rows — always shown in compare; fill with "—" when missing. */
 export const REQUIRED_BENEFIT_KEYS: { key: string; label: string; apiKeys: string[] }[] = [
-  { key: "primary", label: "Primary doctor visit", apiKeys: ["primary_care", "primaryCare", "primary_doctor"] },
-  { key: "specialist", label: "Specialist visit", apiKeys: ["specialist", "specialistVisit", "specialist_care"] },
+  { key: "primary", label: "Primary doctor visit", apiKeys: ["primary_care", "primaryCare", "primary_doctor", "primary_care_visit", "primaryCareVisit", "primary_care_services"] },
+  { key: "specialist", label: "Specialist visit", apiKeys: ["specialist", "specialistVisit", "specialist_care", "specialist_visit", "specialist_care_visit"] },
   {
     key: "diagnostic",
     label: "Diagnostic tests & procedures",
-    apiKeys: ["diagnostic_tests", "diagnosticTests", "diagnostic_procedures"],
+    apiKeys: ["diagnostic_tests", "diagnosticTests", "diagnostic_procedures", "diagnostic_services", "tests_and_procedures", "diagnostic_test_services"],
   },
-  { key: "lab", label: "Lab services", apiKeys: ["lab_services", "labServices", "laboratory"] },
+  { key: "lab", label: "Lab services", apiKeys: ["lab_services", "labServices", "laboratory", "lab", "laboratory_services"] },
   {
     key: "radiology",
     label: "Diagnostic radiology (MRI)",
-    apiKeys: ["diagnostic_radiology", "radiology", "mri", "diagnostic_radiology_services"],
+    apiKeys: ["diagnostic_radiology", "radiology", "mri", "diagnostic_radiology_services", "imaging", "advanced_imaging", "radiology_services"],
   },
-  { key: "xrays", label: "Outpatient x-rays", apiKeys: ["outpatient_xray", "xrays", "outpatient_x_rays"] },
-  { key: "emergency", label: "Emergency care", apiKeys: ["emergency_care", "emergencyCare", "emergency"] },
-  { key: "urgent", label: "Urgent care", apiKeys: ["urgent_care", "urgentCare"] },
-  { key: "inpatient", label: "Inpatient hospital coverage", apiKeys: ["inpatient", "inpatient_hospital", "inpatientHospital"] },
+  { key: "xrays", label: "Outpatient x-rays", apiKeys: ["outpatient_xray", "xrays", "outpatient_x_rays", "xray", "x_rays", "xray_services"] },
+  { key: "emergency", label: "Emergency care", apiKeys: ["emergency_care", "emergencyCare", "emergency", "emergency_services", "er"] },
+  { key: "urgent", label: "Urgent care", apiKeys: ["urgent_care", "urgentCare", "urgent_care_services", "urgent"] },
+  { key: "inpatient", label: "Inpatient hospital coverage", apiKeys: ["inpatient", "inpatient_hospital", "inpatientHospital", "inpatient_hospital_coverage", "inpatient_hospital_services"] },
   {
     key: "outpatient",
     label: "Outpatient hospital coverage",
-    apiKeys: ["outpatient", "outpatient_hospital", "outpatientHospital"],
+    apiKeys: ["outpatient", "outpatient_hospital", "outpatientHospital", "outpatient_hospital_coverage", "outpatient_hospital_services"],
   },
-  { key: "preventive", label: "Preventive services", apiKeys: ["preventive", "preventive_services", "preventiveCare"] },
+  { key: "preventive", label: "Preventive services", apiKeys: ["preventive", "preventive_services", "preventiveCare", "preventive_care_services", "wellness"] },
 ];
 
 export type BenefitRow = { key: string; label: string; text: string };
@@ -263,7 +445,7 @@ export function buildBenefitRowTextsForPlan(
         : inn;
     } else {
       if (d) {
-        const direct = pickDetail(d, req.apiKeys);
+        const direct = deepPickDetail(d, req.apiKeys);
         if (direct !== undefined) {
           if (typeof direct === "object" && direct !== null && !Array.isArray(direct)) {
             text = formatBenefitInOut(direct as Record<string, unknown>, plan);
@@ -297,8 +479,106 @@ function tierTextOrDefault(tiered: string, fallback: string): string {
   return `${fallback}\n${tiered}`;
 }
 
+function walkForFirstKey(
+  val: unknown,
+  wanted: Set<string>,
+  depth = 0
+): unknown {
+  if (depth > 5 || val == null) return undefined;
+  if (Array.isArray(val)) {
+    for (const item of val) {
+      const hit = walkForFirstKey(item, wanted, depth + 1);
+      if (hit !== undefined) return hit;
+    }
+    return undefined;
+  }
+  if (typeof val !== "object") return undefined;
+  const o = val as Record<string, unknown>;
+  for (const [k, v] of Object.entries(o)) {
+    if (wanted.has(k.toLowerCase())) return v;
+  }
+  for (const v of Object.values(o)) {
+    const hit = walkForFirstKey(v, wanted, depth + 1);
+    if (hit !== undefined) return hit;
+  }
+  return undefined;
+}
+
+function deepPickDetail(d: MAPlanDetail, keys: string[]): unknown {
+  const direct = pickDetail(d, keys);
+  if (direct !== undefined) return direct;
+  const wanted = new Set(keys.map((k) => k.toLowerCase()));
+  return walkForFirstKey(d, wanted, 0);
+}
+
+function formatMaCostSharingEntry(e: Record<string, unknown>): string {
+  const ns = e.network_status;
+  const isOon = ns === "OUT_OF_NETWORK" || ns === "out_of_network";
+  const label = isOon ? "Out-of-network" : "In-network";
+  const minC = e.min_coinsurance;
+  const maxC = e.max_coinsurance;
+  if (minC != null || maxC != null) {
+    return `${label}: ${Number(minC ?? 0)}-${Number(maxC ?? 0)}% coinsurance`;
+  }
+  const minP = e.min_copay;
+  const maxP = e.max_copay;
+  if (minP != null || maxP != null) {
+    const a = Number(minP);
+    const b = Number(maxP);
+    if (a === b) return `${label}: $${a} copay`;
+    return `${label}: $${a}-$${b} copay`;
+  }
+  return `${label}: —`;
+}
+
+function formatMaBenefitCostSharing(raw: unknown): string {
+  if (!Array.isArray(raw) || raw.length === 0) return "—";
+  const lines: string[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    lines.push(formatMaCostSharingEntry(item as Record<string, unknown>));
+  }
+  return lines.length ? lines.join("\n") : "—";
+}
+
+function humanizeMaService(service: string): string {
+  if (!service) return "Benefit";
+  return humanizeMedicareEnum(service);
+}
+
+/**
+ * Medicare GET /plan/... returns medical cost-sharing on `ma_benefits` (not legacy `benefits` arrays).
+ * Each item: service, category, cost_sharing[{ network_status, copay/coinsurance }], tiered_cost_sharing, etc.
+ */
+export function extractMaBenefitRows(d: MAPlanDetail): BenefitRow[] {
+  const raw = pickDetail(d, ["ma_benefits", "maBenefits"]);
+  if (!Array.isArray(raw)) return [];
+
+  const rows: BenefitRow[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (!item || typeof item !== "object") continue;
+    const o = item as Record<string, unknown>;
+    const service = String(o.service ?? "");
+    const baseLabel = humanizeMaService(service);
+    let text = formatMaBenefitCostSharing(o.cost_sharing);
+    if (text === "—" && o.tiered_cost_sharing != null) {
+      text = cellString(o.tiered_cost_sharing, 400);
+    }
+    const flags: string[] = [];
+    if (o.authorization_required === true) flags.push("prior auth may apply");
+    if (o.referral_required === true) flags.push("referral may apply");
+    const label = flags.length ? `${baseLabel} (${flags.join("; ")})` : baseLabel;
+    const key = normalizeKey(`${service} ${baseLabel}`);
+    rows.push({ key, label, text });
+  }
+  return rows;
+}
+
 /** Pull human-readable benefit / cost rows from arrays commonly returned on plan detail. */
 export function extractBenefitRows(d: MAPlanDetail): BenefitRow[] {
+  const maRows = extractMaBenefitRows(d);
+
   const raw =
     pickDetail(d, [
       "benefits",
@@ -311,9 +591,9 @@ export function extractBenefitRows(d: MAPlanDetail): BenefitRow[] {
       "service_costs",
     ]) ?? undefined;
 
-  if (!Array.isArray(raw)) return [];
+  const rows: BenefitRow[] = [...maRows];
+  if (!Array.isArray(raw)) return rows;
 
-  const rows: BenefitRow[] = [];
   for (let i = 0; i < raw.length; i++) {
     const item = raw[i];
     if (!item || typeof item !== "object") continue;
@@ -353,7 +633,7 @@ export type ExtraSectionRow = {
 /** Nested extra-benefit lines (hearing / dental / vision / more). */
 export function extractStructuredExtraRows(d: MAPlanDetail): ExtraSectionRow[] {
   const out: ExtraSectionRow[] = [];
-  const groups: { section: string; keys: string[] }[] = [
+  const genericGroups: { section: string; keys: string[] }[] = [
     { section: "Hearing", keys: ["hearing", "hearing_benefits", "hearingBenefits"] },
     { section: "Preventive dental", keys: ["preventive_dental", "preventiveDental", "dental_preventive"] },
     { section: "Comprehensive dental", keys: ["dental", "comprehensive_dental", "dental_benefits"] },
@@ -362,7 +642,7 @@ export function extractStructuredExtraRows(d: MAPlanDetail): ExtraSectionRow[] {
     { section: "Skilled nursing / DME / diabetes", keys: ["skilled_nursing", "dme", "diabetes", "durable_medical_equipment"] },
   ];
 
-  for (const g of groups) {
+  for (const g of genericGroups) {
     const v = pickDetail(d, g.keys);
     if (v === undefined || v === null) continue;
     if (typeof v === "object" && !Array.isArray(v)) {
@@ -377,6 +657,27 @@ export function extractStructuredExtraRows(d: MAPlanDetail): ExtraSectionRow[] {
       out.push({ section: g.section, label: g.section, text: cellString(v, 400) });
     }
   }
+
+  const ab = pickDetail(d, ["abstract_benefits"]);
+  if (ab && typeof ab === "object" && !Array.isArray(ab)) {
+    out.push(...formatAbstractBenefits(ab as Record<string, unknown>));
+  }
+
+  const sb = pickDetail(d, ["additional_supplemental_benefits"]);
+  if (sb && typeof sb === "object" && !Array.isArray(sb)) {
+    out.push(...formatSupplementalBenefits(sb as Record<string, unknown>));
+  }
+
+  const pb = pickDetail(d, ["package_benefits"]);
+  if (pb && typeof pb === "object" && !Array.isArray(pb)) {
+    out.push(...formatPackageBenefits(pb as Record<string, unknown>));
+  }
+
+  const opt = pickDetail(d, ["optional_benefits", "optionalBenefits"]);
+  if (Array.isArray(opt)) {
+    out.push(...formatOptionalBenefits(opt));
+  }
+
   return out;
 }
 
@@ -419,7 +720,14 @@ export function extractDrugSection(d: MAPlanDetail): string {
     "estimated_drug_costs",
     "prescription_benefits",
   ]);
-  return v !== undefined ? cellString(v, 600) : "";
+  if (v !== undefined) return cellString(v, 600);
+
+  const ab = pickDetail(d, ["abstract_benefits"]);
+  if (ab && typeof ab === "object" && !Array.isArray(ab)) {
+    const rows = formatAbstractBenefits(ab as Record<string, unknown>);
+    if (rows.length) return rows.map((r) => `${r.label}:\n${r.text}`).join("\n\n");
+  }
+  return "";
 }
 
 /** Try to read per-pharmacy lines from plan search object (shape varies). */
@@ -459,35 +767,183 @@ function formatMoney(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
+const PHARMACY_COST_ARRAY_KEYS = [
+  "pharmacies",
+  "pharmacy_costs",
+  "pharmacyCosts",
+  "estimated_pharmacy_costs",
+  "estimatedPharmacyCosts",
+  "drug_costs_by_pharmacy",
+  "drugCostsByPharmacy",
+  "pharmacy_drug_costs",
+  "pharmacyDrugCosts",
+  "rx_pharmacy_costs",
+  "prescription_pharmacy_costs",
+  "plan_pharmacy_costs",
+];
+
+/** Medicare sometimes nests store info under `pharmacy` / `pharmacy_info`. */
+function flattenPharmacyCostObject(o: Record<string, unknown>): Record<string, unknown> {
+  const nested = (o.pharmacy ?? o.pharmacy_info ?? o.pharmacyInfo) as unknown;
+  if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+    const n = nested as Record<string, unknown>;
+    const next = { ...o };
+    if (next.pharmacy_name == null && next.name == null) {
+      next.pharmacy_name = n.name ?? n.pharmacy_name ?? n.organization_name ?? n.store_name;
+    }
+    if (next.npi == null) next.npi = n.npi ?? n.pharmacy_npi;
+    return next;
+  }
+  return o;
+}
+
+/** True if object looks like a pharmacy row (not a formulary drug row). */
+function itemLooksLikePharmacyCostRow(o: Record<string, unknown>): boolean {
+  const rawCost =
+    o.estimated_annual_cost ?? o.estimated_cost ?? o.total_cost ?? o.cost ?? o.total ?? o.annual_drug_cost ??
+    o.remaining_premium_and_drugs ?? o.remaining_premium_and_drugs_retail ?? o.remaining_premium_and_drugs_mail_order ??
+    o.annual_drugs_total ?? o.annual_drugs_total_retail ?? o.annual_drugs_total_mail_order;
+  const hasCost =
+    rawCost !== undefined &&
+    rawCost !== null &&
+    String(rawCost).trim() !== "" &&
+    !(typeof rawCost === "number" && !Number.isFinite(rawCost));
+  if (!hasCost) return false;
+  const hasPharmacySignal =
+    o.pharmacy_name != null ||
+    o.pharmacy != null ||
+    o.preferred_pharmacy != null ||
+    o.pharmacy_npi != null ||
+    o.pharmacy_type != null ||
+    (o.npi != null && (o.network_tier != null || o.tier != null));
+  if (hasPharmacySignal) return true;
+  // Search API sometimes uses store name in `name` plus network/tier fields only
+  if (
+    o.name != null &&
+    String(o.name).trim() &&
+    (o.network_tier != null || o.tier != null || o.network_status != null)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/** Parse Medicare-style array of per-pharmacy cost objects. */
+export function parsePharmacyCostArray(c: unknown, strictPharmacyShape = false): PharmacyCostRow[] {
+  if (!Array.isArray(c)) return [];
+  const rows: PharmacyCostRow[] = [];
+  for (const item of c) {
+    if (!item || typeof item !== "object") continue;
+    const o = flattenPharmacyCostObject(item as Record<string, unknown>);
+    if (strictPharmacyShape && !itemLooksLikePharmacyCostRow(o)) continue;
+    const name = String(o.pharmacy_name ?? o.name ?? o.pharmacy ?? "Pharmacy");
+    const tier = String(o.network_tier ?? o.tier ?? o.network_status ?? o.pharmacy_type ?? "");
+    const rawCost =
+      o.estimated_annual_cost ?? o.estimated_cost ?? o.total_cost ?? o.cost ?? o.total ??
+      o.remaining_premium_and_drugs ?? o.remaining_premium_and_drugs_retail ?? o.remaining_premium_and_drugs_mail_order ??
+      o.annual_drugs_total ?? o.annual_drugs_total_retail ?? o.annual_drugs_total_mail_order ?? 0;
+    const cost = typeof rawCost === "number" ? rawCost : parseFloat(String(rawCost).replace(/[,$]/g, "")) || 0;
+    rows.push({
+      pharmacyName: name,
+      networkTier: tier && tier !== "undefined" ? tier : "",
+      estimatedAnnualCost: cost,
+    });
+  }
+  return rows;
+}
+
 /** Structured per-pharmacy cost rows from plan search response. */
 export function extractPharmacyCostTable(plan: MAPlan | PDPPlan): PharmacyCostRow[] {
   const p = plan as unknown as Record<string, unknown>;
-  const candidates = [
-    p.pharmacy_costs,
-    p.pharmacyCosts,
-    p.estimated_pharmacy_costs,
-    p.estimatedPharmacyCosts,
-    p.drug_costs_by_pharmacy,
-  ];
-  for (const c of candidates) {
-    if (!Array.isArray(c)) continue;
-    const rows: PharmacyCostRow[] = [];
-    for (const item of c) {
-      if (!item || typeof item !== "object") continue;
-      const o = item as Record<string, unknown>;
-      const name = String(o.pharmacy_name ?? o.name ?? o.pharmacy ?? "Pharmacy");
-      const tier = String(o.network_tier ?? o.tier ?? o.network_status ?? o.pharmacy_type ?? "");
-      const rawCost = o.estimated_annual_cost ?? o.estimated_cost ?? o.total_cost ?? o.cost ?? o.total ?? 0;
-      const cost = typeof rawCost === "number" ? rawCost : parseFloat(String(rawCost).replace(/[,$]/g, "")) || 0;
-      rows.push({
-        pharmacyName: name,
-        networkTier: tier && tier !== "undefined" ? tier : "",
-        estimatedAnnualCost: cost,
-      });
-    }
+  for (const key of PHARMACY_COST_ARRAY_KEYS) {
+    const c = p[key];
+    const rows = parsePharmacyCostArray(c, false);
     if (rows.length) return rows;
   }
   return [];
+}
+
+/**
+ * Same as extractPharmacyCostTable but reads plan-detail JSON (GET /plan/...).
+ * Medicare often omits per-pharmacy arrays from search results; detail sometimes includes them under different keys.
+ */
+export function extractPharmacyCostTableFromDetail(d: MAPlanDetail | undefined | null): PharmacyCostRow[] {
+  if (!d || typeof d !== "object") return [];
+  for (const key of PHARMACY_COST_ARRAY_KEYS) {
+    const c = pickDetail(d, [key]);
+    const rows = parsePharmacyCostArray(c, true);
+    if (rows.length) return rows;
+  }
+  for (const [key, val] of Object.entries(d as Record<string, unknown>)) {
+    if (!/pharmacy|drug.*cost|rx.*cost|estimated.*drug/i.test(key)) continue;
+    const rows = parsePharmacyCostArray(val, true);
+    if (rows.length) return rows;
+  }
+  return [];
+}
+
+function toPositiveNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v) && v > 0) return v;
+  if (typeof v === "string" && v.trim()) {
+    const n = parseFloat(v.replace(/[,$]/g, ""));
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+/** When Medicare omits per-pharmacy rows, surface plan-level estimates from search results. */
+function syntheticPharmacyRowsFromPlan(plan: MAPlan | PDPPlan): PharmacyCostRow[] {
+  const p = plan as unknown as Record<string, unknown>;
+  const rem = toPositiveNumber(p.remaining_premium_and_drugs);
+  if (rem != null) {
+    return [
+      {
+        pharmacyName: "Total premium + drugs (est. annual)",
+        networkTier: "",
+        estimatedAnnualCost: rem,
+      },
+    ];
+  }
+  const ann = toPositiveNumber(p.annual_drugs_total);
+  if (ann != null) {
+    return [
+      {
+        pharmacyName: "Estimated drug cost (annual)",
+        networkTier: "",
+        estimatedAnnualCost: ann,
+      },
+    ];
+  }
+  const retail = toPositiveNumber(p.remaining_premium_and_drugs_retail ?? p.annual_drugs_total_retail);
+  const mail = toPositiveNumber(p.remaining_premium_and_drugs_mail_order ?? p.annual_drugs_total_mail_order);
+  const out: PharmacyCostRow[] = [];
+  if (retail != null) {
+    out.push({
+      pharmacyName: "Retail / standard pharmacy (est. annual)",
+      networkTier: "",
+      estimatedAnnualCost: retail,
+    });
+  }
+  if (mail != null) {
+    out.push({
+      pharmacyName: "Mail order (est. annual)",
+      networkTier: "",
+      estimatedAnnualCost: mail,
+    });
+  }
+  return out;
+}
+
+/** Prefer search payload, then plan-detail (full comparison fetches both). */
+export function mergePharmacyCostTables(
+  plan: MAPlan | PDPPlan,
+  detail: MAPlanDetail | undefined | null
+): PharmacyCostRow[] {
+  const fromSearch = extractPharmacyCostTable(plan);
+  if (fromSearch.length > 0) return fromSearch;
+  const fromDetail = extractPharmacyCostTableFromDetail(detail ?? undefined);
+  if (fromDetail.length > 0) return fromDetail;
+  return syntheticPharmacyRowsFromPlan(plan);
 }
 
 /** Check which of the user's entered drugs are covered by the plan's formulary. */

@@ -29,10 +29,7 @@ export async function GET(request: NextRequest) {
       const errText = await upstream.text();
       console.error("[plan-detail] Upstream error:", upstream.status, errText.substring(0, 500));
       return NextResponse.json(
-        {
-          error: `Medicare.gov returned ${upstream.status}`,
-          detail: errText.substring(0, 1000),
-        },
+        { error: `Plan detail service returned an error (${upstream.status})` },
         { status: 502 }
       );
     }
@@ -40,10 +37,9 @@ export async function GET(request: NextRequest) {
     const data = await upstream.json();
     return NextResponse.json(data);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown";
-    console.error("[plan-detail] Exception:", msg);
+    console.error("[plan-detail] Exception:", e instanceof Error ? e.message : e);
     return NextResponse.json(
-      { error: `Failed to fetch plan detail: ${msg}` },
+      { error: "Failed to fetch plan detail" },
       { status: 502 }
     );
   }

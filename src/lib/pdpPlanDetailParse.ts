@@ -1,5 +1,5 @@
 import type { PDPPlanDetail, DrugCoverageRow } from "@/types";
-import { pickDetail, cellString } from "./maPlanDetailParse";
+import { pickDetail, cellString, formatAbstractBenefits } from "./maPlanDetailParse";
 
 /** Extract drug formulary / tier hints from PDP plan detail. */
 export function extractDrugFormulary(d: PDPPlanDetail): {
@@ -54,7 +54,14 @@ export function extractPDPDrugSection(d: PDPPlanDetail): string {
     "estimated_drug_costs",
     "prescription_benefits",
   ]);
-  return v !== undefined ? cellString(v, 600) : "";
+  if (v !== undefined) return cellString(v, 600);
+
+  const ab = pickDetail(d, ["abstract_benefits"]);
+  if (ab && typeof ab === "object" && !Array.isArray(ab)) {
+    const rows = formatAbstractBenefits(ab as Record<string, unknown>);
+    if (rows.length) return rows.map((r) => `${r.label}:\n${r.text}`).join("\n\n");
+  }
+  return "";
 }
 
 /** Check which of the user's entered drugs are covered by the PDP plan's formulary. */

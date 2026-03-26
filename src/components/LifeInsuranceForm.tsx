@@ -515,17 +515,6 @@ export default function LifeInsuranceForm({
             </optgroup>
           ))}
         </select>
-        <p
-          className={
-            dense
-              ? "text-[10px] leading-snug text-gray-400 mt-1"
-              : "text-xs text-gray-400 mt-1"
-          }
-        >
-          {PRODUCT_CATEGORY_GROUPS.find((g) =>
-            g.options.some((o) => o.value === category)
-          )?.description || ""}
-        </p>
       </div>
 
       {/* Coverage Amount — premium mode fixed to monthly (M) for Compulife */}
