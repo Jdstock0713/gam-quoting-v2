@@ -17,10 +17,6 @@ function getBaseUrl(): string {
   return process.env.COMPULIFE_PROXY_URL || DIRECT_COMPULIFE_BASE;
 }
 
-function isUsingProxy(): boolean {
-  return !!process.env.COMPULIFE_PROXY_URL;
-}
-
 /**
  * GET request to Compulife API (via proxy if configured).
  *
