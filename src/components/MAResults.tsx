@@ -1087,3 +1087,17 @@ export default function MAResults({ zip, county, onBack }: Props) {
           const nextPlans = maComparePlans.filter((_, i) => i !== idx);
           const nextDetails = maCompareDetails.filter((_, i) => i !== idx);
           if (nextPlans.length < 2) {
+            closeMaCompare();
+          } else {
+            setMaComparePlans(nextPlans);
+            setMaCompareDetails(nextDetails);
+          }
+          setSelectedIds((prev) => {
+            const removedPlan = maComparePlans[idx];
+            return removedPlan ? prev.filter((id) => id !== removedPlan.id) : prev;
+          });
+        }}
+      />
+    </div>
+  );
+}

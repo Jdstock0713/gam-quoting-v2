@@ -236,4 +236,7 @@ export default function ZipEntry({ onContinue, initialZip, initialCounty }: Prop
           </div>
         )}
 
-      
+      </div>
+    </div>
+  );
+}
