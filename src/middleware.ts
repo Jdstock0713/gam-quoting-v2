@@ -12,7 +12,7 @@ const securityHeaders: Record<string, string> = {
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://www.compulifeapi.com",
     "font-src 'self' data:",
     "connect-src 'self' https://www.medicare.gov https://www.compulifeapi.com https://*.supabase.co",
     "frame-ancestors 'self' https://*.wixsite.com https://*.wix.com https://*.editorx.io",
