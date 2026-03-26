@@ -204,8 +204,6 @@ export default function LifeCompareModal({
 
   if (!mounted || !open) return null;
 
-  const results = columns.map((c) => c.result);
-
   const modal = (
     <div
       className="life-compare-portal fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 print:bg-white print:p-4"

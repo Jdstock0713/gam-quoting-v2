@@ -9,6 +9,7 @@ export async function GET() {
     if (!settings) {
       return NextResponse.json({ error: "No settings found" }, { status: 404 });
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { admin_password_hash: _hash, ...publicSettings } = settings;
     return NextResponse.json(publicSettings);
   } catch {
@@ -34,6 +35,7 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { admin_password_hash: _hash2, ...publicSettings } = result;
     return NextResponse.json(publicSettings);
   } catch {

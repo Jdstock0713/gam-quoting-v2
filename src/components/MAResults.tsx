@@ -219,7 +219,6 @@ function FilterPanel({
 function ComparePanel({
   compact,
   compared,
-  selectedIds,
   maxCompare,
   onOpenFull,
   onClear,
@@ -229,7 +228,6 @@ function ComparePanel({
 }: {
   compact: boolean;
   compared: MAPlan[];
-  selectedIds: number[];
   maxCompare: number;
   onOpenFull: () => void;
   onClear: () => void;
@@ -606,7 +604,7 @@ export default function MAResults({ zip, county, onBack }: Props) {
 
   const compareProps = {
     compact: true,
-    compared, selectedIds, maxCompare: MAX_MA_COMPARE,
+    compared, maxCompare: MAX_MA_COMPARE,
     onOpenFull: openFullComparison, onClear: () => setSelectedIds([]),
     compareLoading: maCompareLoading, compareError: maCompareError,
     drugsCount: drugs.length,
@@ -1089,17 +1087,3 @@ export default function MAResults({ zip, county, onBack }: Props) {
           const nextPlans = maComparePlans.filter((_, i) => i !== idx);
           const nextDetails = maCompareDetails.filter((_, i) => i !== idx);
           if (nextPlans.length < 2) {
-            closeMaCompare();
-          } else {
-            setMaComparePlans(nextPlans);
-            setMaCompareDetails(nextDetails);
-          }
-          setSelectedIds((prev) => {
-            const removedPlan = maComparePlans[idx];
-            return removedPlan ? prev.filter((id) => id !== removedPlan.id) : prev;
-          });
-        }}
-      />
-    </div>
-  );
-}

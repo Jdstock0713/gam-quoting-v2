@@ -95,11 +95,6 @@ export default function ZipEntry({ onContinue, initialZip, initialCounty }: Prop
     }
   }
 
-  function handleContinue() {
-    if (!county || !selectedPlanType) return;
-    onContinue(digitsFromField(), county, selectedPlanType);
-  }
-
   const zipFieldDigits = digitsFromField();
   const zipReady = zipFieldDigits.length === 5;
 
@@ -241,7 +236,4 @@ export default function ZipEntry({ onContinue, initialZip, initialCounty }: Prop
           </div>
         )}
 
-      </div>
-    </div>
-  );
-}
+      
